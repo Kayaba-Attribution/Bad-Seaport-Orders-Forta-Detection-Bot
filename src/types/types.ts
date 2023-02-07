@@ -175,6 +175,7 @@ export type TransactionData = {
     currency: { name: string; decimals: number };
     contractAddress: string;
     quantity: number;
+    floor?: number;
     to?: string;
     from?: string;
     toAddr?: string;

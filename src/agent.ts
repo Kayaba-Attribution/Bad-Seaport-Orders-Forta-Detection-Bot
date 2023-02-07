@@ -26,10 +26,11 @@ let nftContractsData: ContractData[] = [];
 const handleTransaction: HandleTransaction = async (
   txEvent: TransactionEvent
 ) => {
-  //console.log(txEvent.addresses)
+  //console.log(txEvent)
   const findings: Finding[] = [];
-  if(!txEvent.addresses.hasOwnProperty(SEAPORT_ADDRESS)) return findings;
+
   // Only intersted on Seaport
+  if(!txEvent.addresses.hasOwnProperty(SEAPORT_ADDRESS)) return findings;
 
   // limiting this agent to emit only 5 findings so that the alert feed is not spammed
   if (findingsCount >= 5) return findings;
@@ -44,6 +45,7 @@ const handleTransaction: HandleTransaction = async (
   let nftContract: ContractData;
   for (nftContract of nftContractsData) {
     let find: any = await transferIndexer(txEvent.transaction.hash, nftContract);
+    if(!find) return [];
     if (!find.name) throw new Error("Unexpected error: Missing Finding Object");
 
     find.addresses = txEvent.addresses
@@ -53,7 +55,6 @@ const handleTransaction: HandleTransaction = async (
     findings.push(find)
   }
 
-  console.log("EMD")
   // ! OLD FROM HERE TO END FILE
   return findings;
 };

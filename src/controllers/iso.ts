@@ -1,4 +1,4 @@
-import { formatPrice, getTokenData, getReadableName, getEthUsdPrice } from '../utils/api.js';
+import { formatPrice, getTokenData, getReadableName, getEthUsdPrice, getCollectionFloorPrice } from '../utils/api.js';
 import _ from 'lodash';
 import { ethers } from 'ethers';
 import { markets } from '../config/markets.js';
@@ -36,6 +36,7 @@ async function parseTransaction(
 ) {
     // ! Check the "to" filed on Alchemy txn receipt to match for markets (marketplaces)
     const receipt = await alchemy.core.getTransactionReceipt(transactionHash);
+    console.log(receipt)
     const recipient = receipt ? receipt.to.toLowerCase() : '';
 
     if (!receipt || !(recipient in markets)) {
@@ -80,6 +81,14 @@ async function parseTransaction(
         return null;
     }
     tx.to = await getReadableName(tx.toAddr ?? '');
+
+    let floor = await getCollectionFloorPrice(contractAddress);
+    if (floor && 'floorPrice' in floor.openSea) {
+        tx.floor = floor.openSea.floorPrice;
+    } else {
+        console.log('floor is undefined or openSea is of type FloorPriceError');
+    }
+
     tx.from = await getReadableName(tx.fromAddr ?? '');
     tx.tokenData = await getTokenData(contractAddress, tx.tokenId ?? '', tx.tokenType);
     tx.tokenName = tx.tokenData?.name || `${tx.symbol} #${tx.tokenId}`;
@@ -88,6 +97,7 @@ async function parseTransaction(
             ? await getEthUsdPrice(tx.totalPrice)
             : null;
     tx.ethUsdValue = tx.usdPrice ? `($ ${tx.usdPrice})` : '';
+    
 
     return tx;
 }
@@ -110,11 +120,12 @@ const transferIndexer = async (transactionHash: string, contractData: ContractDa
                 'quantity': quantity.toString(),
                 'contractName': contractName!,
                 'market': market.displayName,
-                'currency': currency.name,
+                'currency': currency?.name,
                 'price': totalPrice.toString(),
                 'fromAddr': fromAddr!,
                 'toAddr': toAddr!,
                 'tokenIds': txData.tokens!.toString(),
+                'collectionFloor': txData.floor!.toString()
             },
         })
 

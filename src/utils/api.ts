@@ -6,7 +6,7 @@ import { ethers } from 'ethers';
 import type { BigNumberish } from 'ethers';
 import retry from 'async-retry';
 import { Network, Alchemy } from 'alchemy-sdk';
-import type { NftTokenType } from 'alchemy-sdk';
+import type { NftTokenType, GetFloorPriceResponse } from 'alchemy-sdk';
 import type { ContractData, CustomError, TokenData } from '../types';
 
 const ALCHEMY_API_KEY = process.env.ALCHEMY_API_KEY || '';
@@ -136,11 +136,33 @@ const retryOnGetNFTMetadata = async (
                 throw new Error('Might hitting rate limit, try again');
             }
 
-            console.log(response)
-
             return {
                 name: _.get(response, 'title'),
                 image: _.get(response, 'media[0].gateway')
+            };
+        },
+        {
+            retries: 5
+        }
+    );
+
+    return result;
+};
+
+const retryOnGetCollectionMetadata = async (
+    contractAddress: string
+): Promise<GetFloorPriceResponse> => {
+    const result = await retry(
+        async () => {
+            const response = await alchemy.nft.getFloorPrice(contractAddress);
+
+            if (response === null) {
+                throw new Error('Might hitting rate limit, try again');
+            }
+        
+            return {
+                openSea: _.get(response, 'openSea'),
+                looksRare: _.get(response, 'looksRare')
             };
         },
         {
@@ -264,6 +286,20 @@ const getTokenData = async (
     return tokenData;
 };
 
+const getCollectionFloorPrice = async (
+    contractAddress: string
+) => {
+    let collectionData;
+
+    if (DEFAULT_NFT_API === 'Alchemy') {
+        collectionData = await retryOnGetCollectionMetadata(contractAddress);
+    } else {
+        // No opensea integration
+    }
+
+    return collectionData;
+};
+
 const getContractData = async (contractAddress: string) => {
     let contractData;
 
@@ -340,5 +376,6 @@ export {
     getEthUsdPrice,
     getOpenseaName,
     getContractData,
-    getReadableName
+    getReadableName,
+    getCollectionFloorPrice
 };
