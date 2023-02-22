@@ -20,6 +20,7 @@ const settings = {
     network: Network.ETH_MAINNET
 };
 const alchemy = new Alchemy(settings);
+const provider = new ethers.providers.AlchemyProvider('homestead', ALCHEMY_API_KEY);
 
 const openseaNftApi = async (tokenId: BigNumberish, contractAddress: string) => {
     const baseURL = `https://api.opensea.io/api/v1/asset/${contractAddress}/${tokenId}`;
@@ -180,7 +181,7 @@ const retryOnGetContractMetadata = async (contractAddress: string): Promise<Cont
             const response = await alchemy.nft.getContractMetadata(contractAddress);
 
             if (response === null) {
-                throw new Error('Might hitting rate limit, try again');
+                console.error('Might hitting rate limit, try again');
             }
 
             return {
@@ -258,6 +259,17 @@ const getENSName = async (address: string) => {
         const result = await provider.lookupAddress(address);
 
         return result;
+    } catch (error) {
+        console.log('API error: ', error);
+    }
+};
+
+const isContract = async (address: string) => {
+    try {
+        // const provider = new ethers.providers.CloudflareProvider();
+        const result = await provider.getCode(address);
+
+        return result !== '0x';
     } catch (error) {
         console.log('API error: ', error);
     }
@@ -377,5 +389,6 @@ export {
     getOpenseaName,
     getContractData,
     getReadableName,
-    getCollectionFloorPrice
+    getCollectionFloorPrice,
+    isContract
 };

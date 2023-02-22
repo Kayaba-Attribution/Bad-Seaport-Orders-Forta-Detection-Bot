@@ -1,9 +1,9 @@
 import { formatPrice, getTokenData, getReadableName, getEthUsdPrice, getCollectionFloorPrice } from '../utils/api.js';
 import _ from 'lodash';
-import { ethers, utils } from 'ethers';
+import { ethers } from 'ethers';
 import { markets } from '../config/markets.js';
 import { currencies } from '../config/currencies.js';
-import { saleEventTypes, cancelEventTypes } from '../config/logEventTypes.js';
+import { saleEventTypes } from '../config/logEventTypes.js';
 import { initializeTransactionData } from '../config/initialize.js';
 
 import { parseSeaport } from './parseSeaport.js';
@@ -18,9 +18,7 @@ import {
     Finding,
     FindingSeverity,
     FindingType,
-    TransactionEvent,
 } from "forta-agent";
-
 
 
 
@@ -31,21 +29,24 @@ const isSeaport = (
 };
 
 
-async function transferIndexer(
-    txEvent: TransactionEvent,
+async function parseTransaction(
+    transactionHash: string,
+    contractAddress: string,
     contractData: ContractData
 ) {
+    // ! Check the "to" filed on Alchemy txn receipt to match for markets (marketplaces)
+    const receipt = await alchemy.core.getTransactionReceipt(transactionHash);
+    console.log(receipt)
+    const recipient = receipt ? receipt.to.toLowerCase() : '';
 
-    const contractAddress: string = contractData.address!;
-    const transactionHash: string = txEvent.transaction.hash;
-
-    let recipient: string = txEvent.to ? txEvent.to : '';
-
+    if (!receipt || !(recipient in markets)) {
+        return null;
+    }
     // ! Create a tx obeject with empty fields, which will be filled later on
     const tx = initializeTransactionData(transactionHash, contractData, recipient, contractAddress);
-    const cancelEvents: Finding[] = [];
 
-    for (const log of txEvent.logs) {
+    for (const log of receipt.logs) {
+        //console.log(receipt.logs);
         const logAddress = log.address.toLowerCase();
         const logMarket = _.get(markets, logAddress);
         if (logAddress in currencies) {
@@ -55,23 +56,7 @@ async function transferIndexer(
         parseSaleToken(tx, log, logAddress);
 
         const isSale = logAddress === recipient && saleEventTypes.includes(log.topics[0]);
-
-        const isCancel = cancelEventTypes.includes(log.topics[0])
-
-        if (isCancel) {
-            cancelEvents.push(Finding.fromObject({
-                name: "Seaport 1.1 ERC-721 Transfer",
-                description: `Seaport Orders Cancelled`,
-                alertId: "FORTA-1",
-                severity: FindingSeverity.Info,
-                type: FindingType.Info,
-            }));
-        }
-
-        if (cancelEvents.length == 1) {
-            return cancelEvents[0];
-        }
-
+        
         if (isSale) {
             const marketLogDecoder = isSale
                 ? tx.market.logDecoder
@@ -92,7 +77,7 @@ async function transferIndexer(
     tx.quantity = tx.tokenType === 'ERC721' ? tx.tokens.length : _.sum(tx.tokens);
 
     if ((tx.quantity === 0)) {
-        console.error(`\n No tokens found. for hash ${transactionHash}\n`);
+        console.error('No tokens found. Please check the contract address is correct.');
         return null;
     }
     tx.to = await getReadableName(tx.toAddr ?? '');
@@ -107,15 +92,24 @@ async function transferIndexer(
     tx.from = await getReadableName(tx.fromAddr ?? '');
     tx.tokenData = await getTokenData(contractAddress, tx.tokenId ?? '', tx.tokenType);
     tx.tokenName = tx.tokenData?.name || `${tx.symbol} #${tx.tokenId}`;
+    tx.sweeperAddr = receipt.from;
     tx.usdPrice = (tx.currency.name === 'ETH' || tx.currency.name === 'WETH')
-        ? await getEthUsdPrice(tx.totalPrice)
-        : null;
+            ? await getEthUsdPrice(tx.totalPrice)
+            : null;
     tx.ethUsdValue = tx.usdPrice ? `($ ${tx.usdPrice})` : '';
+    
 
-    if (tx) {
-        const { tokenName, contractName, swap, market, totalPrice, currency, quantity, fromAddr, toAddr, tokenId } = tx;
+    return tx;
+}
+
+
+const transferIndexer = async (transactionHash: string, contractData: ContractData) => {
+    const contractAddress: string = contractData.address!;
+    const txData = await parseTransaction(transactionHash, contractAddress, contractData);
+    if (txData) {
+        const { tokenName, contractName, swap, market, totalPrice, currency, quantity, fromAddr, toAddr, tokenId } = txData;
         console.log(`${quantity} ${contractName || tokenName} sold on ${market.displayName} for ${totalPrice} ${currency.name}`);
-
+        
         return Finding.fromObject({
             name: "Seaport 1.1 ERC-721 Transfer",
             description: `Bad Seaport Orders Forta Detection`,
@@ -130,8 +124,8 @@ async function transferIndexer(
                 'price': totalPrice.toString(),
                 'fromAddr': fromAddr!,
                 'toAddr': toAddr!,
-                'tokenIds': tx.tokens!.toString(),
-                'collectionFloor': tx.floor!.toString(),
+                'tokenIds': txData.tokens!.toString(),
+                'collectionFloor': txData.floor!.toString()
             },
         })
 
