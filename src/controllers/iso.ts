@@ -9,7 +9,7 @@ import { initializeTransactionData } from '../config/initialize.js';
 import { parseSeaport } from './parseSeaport.js';
 import { parseSaleToken } from './parseSaleToken.js';
 
-import type { ContractData, DecodedLogData, SeaportOrder } from '../types/index.js';
+import type { ContractData, DecodedLogData, SeaportOrder, BatchContractInfo } from '../types/index.js';
 import { NftTokenType } from 'alchemy-sdk';
 import Web3EthAbi from 'web3-eth-abi';
 import { alchemy } from '../config/setup.js';
@@ -33,7 +33,7 @@ const isSeaport = (
 
 async function transferIndexer(
     txEvent: TransactionEvent,
-    contractData: ContractData
+    contractData: BatchContractInfo
 ) {
 
     const contractAddress: string = contractData.address!;
@@ -42,7 +42,7 @@ async function transferIndexer(
     let recipient: string = txEvent.to ? txEvent.to : '';
 
     // ! Create a tx obeject with empty fields, which will be filled later on
-    const tx = initializeTransactionData(transactionHash, contractData, recipient, contractAddress);
+    const tx = initializeTransactionData(transactionHash, contractData.contractMetadata, recipient, contractAddress);
     const cancelEvents: Finding[] = [];
 
     for (const log of txEvent.logs) {
@@ -68,7 +68,7 @@ async function transferIndexer(
             }));
         }
 
-        if (cancelEvents.length == 1) {
+        if (cancelEvents.length === 1) {
             return cancelEvents[0];
         }
 
@@ -97,13 +97,7 @@ async function transferIndexer(
     }
     tx.to = await getReadableName(tx.toAddr ?? '');
 
-    let floor = await getCollectionFloorPrice(contractAddress);
-    if (floor && 'floorPrice' in floor.openSea) {
-        tx.floor = floor.openSea.floorPrice;
-    } else {
-        console.log('floor is undefined or openSea is of type FloorPriceError');
-    }
-
+    tx.floor = contractData.contractMetadata.openSea?.floorPrice;
     tx.from = await getReadableName(tx.fromAddr ?? '');
     tx.tokenData = await getTokenData(contractAddress, tx.tokenId ?? '', tx.tokenType);
     tx.tokenName = tx.tokenData?.name || `${tx.symbol} #${tx.tokenId}`;

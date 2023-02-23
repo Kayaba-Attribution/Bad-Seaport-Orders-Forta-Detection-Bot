@@ -37,21 +37,21 @@ const handleTransaction: HandleTransaction = async (
   // Only intersted on Seaport if not present return 0 findings.
   // Do not run Alchemy API calls on OpenSea Contract.
   if (!txEvent.addresses.hasOwnProperty(SEAPORT_ADDRESS)) { return findings } else { delete txEvent.addresses[SEAPORT_ADDRESS] }
-  console.log(txEvent.addresses)
 
   // limiting this agent to emit only 5 findings so that the alert feed is not spammed
   //if (findingsCount >= 5) return findings;
 
-  // Retrieve information from other addresses included, goal is get the info of the ERC-721s
+  // Retrieve metadata from other addresses included, goal is get the info of the NFTs
+  // API returns {} for EOA or UNKNOWN for contracts that are not ERC721 or ERC1155 standards.
   nftContractsData = await getBatchContractData(Object.keys(txEvent.addresses));
-  //console.log(nftContractsData)
-  //console.log("getBatchContractData for:", info);
-  //console.log("getBatchContractData for:", await getEthUsdPrice(10));
+
   for (const info of nftContractsData) {
 
     if (Object.keys(info).length !== 0) {
       if (info.contractMetadata.tokenType === 'ERC721' || info.contractMetadata.tokenType === 'ERC1155') {
-        console.log(info)
+        console.log(`run indexer for ${info.contractMetadata.name} ${info.address}`)
+        let find: any = await transferIndexer(txEvent, info);
+
       }
     }
   }

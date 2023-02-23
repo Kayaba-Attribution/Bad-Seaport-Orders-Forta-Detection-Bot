@@ -1,9 +1,9 @@
 import { markets } from './markets.js';
-import type { ContractData, TransactionData } from '../types';
+import type { BatchContractInfo, TransactionData } from '../types';
 
 export const initializeTransactionData = (
     transactionHash: string,
-    contractData: ContractData,
+    contractData: BatchContractInfo['contractMetadata'],
     recipient: string,
     contractAddress: string
 ) => {
