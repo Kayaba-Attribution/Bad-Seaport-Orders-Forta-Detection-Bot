@@ -95,11 +95,12 @@ async function transferIndexer(
         console.error(`\n No tokens found. for hash ${transactionHash}\n`);
         return null;
     }
+
     tx.to = await getReadableName(tx.toAddr ?? '');
+    tx.from = await getReadableName(tx.fromAddr ?? '');
 
     tx.floor = contractData.contractMetadata.openSea?.floorPrice;
-    tx.from = await getReadableName(tx.fromAddr ?? '');
-    tx.tokenData = await getTokenData(contractAddress, tx.tokenId ?? '', tx.tokenType);
+
     tx.tokenName = tx.tokenData?.name || `${tx.symbol} #${tx.tokenId}`;
     tx.usdPrice = (tx.currency.name === 'ETH' || tx.currency.name === 'WETH')
         ? await getEthUsdPrice(tx.totalPrice)
