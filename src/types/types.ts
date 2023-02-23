@@ -164,8 +164,6 @@ export type Recipient =
 
 export type TransactionData = {
     recipient: Recipient;
-    swap: Swap;
-    isNftTrader?: boolean;
     prices: string[];
     totalPrice: number;
     tokens: BigNumberish[];
@@ -173,10 +171,9 @@ export type TransactionData = {
     tokenData?: TokenData;
     symbol: string | undefined;
     tokenType: NftTokenType;
-    contractName: string | undefined;
+    contractName: string;
     market: Market;
     marketList: Market[];
-    gifImage?: Buffer | Uint8Array;
     currency: { name: string; decimals: number };
     contractAddress: string;
     quantity: number;
@@ -186,8 +183,6 @@ export type TransactionData = {
     toAddr?: string;
     fromAddr?: string;
     tokenName?: string;
-    sweeper?: string;
-    sweeperAddr?: string;
     usdPrice?: string | null;
     ethUsdValue?: string;
     transactionHash: string;

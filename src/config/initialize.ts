@@ -8,14 +8,6 @@ export const initializeTransactionData = (
     contractAddress: string
 ) => {
     const tx: TransactionData = {
-        swap: {
-            taker: {
-                spentAssets: []
-            },
-            maker: {
-                spentAssets: []
-            }
-        },
         recipient: markets[recipient].name,
         tokens: [],
         prices: [],
@@ -23,7 +15,7 @@ export const initializeTransactionData = (
         quantity: 0,
         symbol: contractData.symbol,
         tokenType: contractData.tokenType,
-        contractName: contractData.name,
+        contractName: contractData.name!,
         marketList: [],
         market: markets[recipient],
         currency: { name: 'ETH', decimals: 18 },

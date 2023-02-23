@@ -1,4 +1,4 @@
-import { formatPrice, getTokenData, getReadableName, getEthUsdPrice, getCollectionFloorPrice } from '../utils/api.js';
+import { formatPrice, getReadableName, getEthUsdPrice } from '../utils/api.js';
 import _ from 'lodash';
 import { ethers, utils } from 'ethers';
 import { markets } from '../config/markets.js';
@@ -9,7 +9,7 @@ import { initializeTransactionData } from '../config/initialize.js';
 import { parseSeaport } from './parseSeaport.js';
 import { parseSaleToken } from './parseSaleToken.js';
 
-import type { ContractData, DecodedLogData, SeaportOrder, BatchContractInfo } from '../types/index.js';
+import type { DecodedLogData, SeaportOrder, BatchContractInfo } from '../types/index.js';
 import { NftTokenType } from 'alchemy-sdk';
 import Web3EthAbi from 'web3-eth-abi';
 import { alchemy } from '../config/setup.js';
@@ -100,15 +100,15 @@ async function transferIndexer(
     tx.from = await getReadableName(tx.fromAddr ?? '');
 
     tx.floor = contractData.contractMetadata.openSea?.floorPrice;
-
-    tx.tokenName = tx.tokenData?.name || `${tx.symbol} #${tx.tokenId}`;
+    
+    tx.tokenName = tx.contractName || `${tx.symbol} #${tx.tokenId}`;
     tx.usdPrice = (tx.currency.name === 'ETH' || tx.currency.name === 'WETH')
         ? await getEthUsdPrice(tx.totalPrice)
         : null;
     tx.ethUsdValue = tx.usdPrice ? `($ ${tx.usdPrice})` : '';
 
     if (tx) {
-        const { tokenName, contractName, swap, market, totalPrice, currency, quantity, fromAddr, toAddr, tokenId } = tx;
+        const { tokenName, contractName, market, totalPrice, currency, quantity, fromAddr, toAddr } = tx;
         console.log(`${quantity} ${contractName || tokenName} sold on ${market.displayName} for ${totalPrice} ${currency.name}`);
 
         return Finding.fromObject({

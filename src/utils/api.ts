@@ -71,32 +71,7 @@ const readImageData = async (image: string | Buffer) => {
     return result;
 };
 
-const retryOnOpenseaNftApi = async (
-    tokenId: BigNumberish,
-    contractAddress: string
-): Promise<TokenData> => {
-    const result = await retry(
-        async () => {
-            const response = await openseaNftApi(tokenId, contractAddress);
 
-            if (response === null) {
-                throw new Error('Might hitting rate limit, try again');
-            }
-
-            const data = _.get(response, 'data');
-
-            return {
-                name: _.get(data, 'name'),
-                image: _.get(data, 'image_url')
-            };
-        },
-        {
-            retries: 5
-        }
-    );
-
-    return result;
-};
 
 const getOpenseaName = async (address: string) => {
     try {
@@ -124,55 +99,6 @@ const getOpenseaName = async (address: string) => {
     }
 };
 
-const retryOnGetNFTMetadata = async (
-    contractAddress: string,
-    tokenId: BigNumberish,
-    tokenType: NftTokenType
-): Promise<TokenData> => {
-    const result = await retry(
-        async () => {
-            const response = await alchemy.nft.getNftMetadata(contractAddress, tokenId, tokenType);
-
-            if (response === null) {
-                throw new Error('Might hitting rate limit, try again');
-            }
-
-            return {
-                name: _.get(response, 'title'),
-                image: _.get(response, 'media[0].gateway')
-            };
-        },
-        {
-            retries: 5
-        }
-    );
-
-    return result;
-};
-
-const retryOnGetCollectionMetadata = async (
-    contractAddress: string
-): Promise<GetFloorPriceResponse> => {
-    const result = await retry(
-        async () => {
-            const response = await alchemy.nft.getFloorPrice(contractAddress);
-
-            if (response === null) {
-                throw new Error('Might hitting rate limit, try again');
-            }
-
-            return {
-                openSea: _.get(response, 'openSea'),
-                looksRare: _.get(response, 'looksRare')
-            };
-        },
-        {
-            retries: 5
-        }
-    );
-
-    return result;
-};
 
 
 const retryOnGetContractMetadata = async (contractAddress: string): Promise<ContractData> => {
@@ -282,35 +208,6 @@ const getReadableName = async (address: string) => {
     return result;
 };
 
-const getTokenData = async (
-    contractAddress: string,
-    tokenId: BigNumberish,
-    tokenType: NftTokenType
-) => {
-    let tokenData;
-
-    if (DEFAULT_NFT_API === 'Alchemy') {
-        tokenData = await retryOnGetNFTMetadata(contractAddress, tokenId, tokenType);
-    } else {
-        tokenData = await retryOnOpenseaNftApi(tokenId, contractAddress);
-    }
-
-    return tokenData;
-};
-
-const getCollectionFloorPrice = async (
-    contractAddress: string
-) => {
-    let collectionData;
-
-    if (DEFAULT_NFT_API === 'Alchemy') {
-        collectionData = await retryOnGetCollectionMetadata(contractAddress);
-    } else {
-        // No opensea integration
-    }
-
-    return collectionData;
-};
 
 const getContractData = async (contractAddress: string) => {
     let contractData;
@@ -414,7 +311,6 @@ const formatPrice = (price: number) => {
 export {
     getENSName,
     formatPrice,
-    getTokenData,
     readImageData,
     getArrayBuffer,
     shortenAddress,
@@ -422,7 +318,6 @@ export {
     getOpenseaName,
     getContractData,
     getReadableName,
-    getCollectionFloorPrice,
     isContract,
     getBatchContractData
 };

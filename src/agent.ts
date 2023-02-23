@@ -51,29 +51,18 @@ const handleTransaction: HandleTransaction = async (
       if (info.contractMetadata.tokenType === 'ERC721' || info.contractMetadata.tokenType === 'ERC1155') {
         console.log(`run indexer for ${info.contractMetadata.name} ${info.address}`)
         let find: any = await transferIndexer(txEvent, info);
+        if (!find) return [];
+        if (!find.name) throw new Error("Unexpected error: Missing Finding Object");
 
+        find.addresses = txEvent.addresses
+        find.addresses.hasOwnProperty(find.metadata.toAddr) ? find.addresses[find.metadata.toAddr] = true : '';
+        find.addresses[find.metadata.fromAddr] = true;
+
+        findings.push(find)
       }
     }
   }
 
-  return findings;
-
-  // Run the transfer detection for all contracts
-  let nftContract: ContractData;
-  // for (nftContract of nftContractsData) {
-  //   console.log(`run indexer for ${nftContract.name} ${nftContract.address}`)
-  //   let find: any = await transferIndexer(txEvent, nftContract);
-  //   if (!find) return [];
-  //   if (!find.name) throw new Error("Unexpected error: Missing Finding Object");
-
-  //   find.addresses = txEvent.addresses
-  //   find.addresses.hasOwnProperty(find.metadata.toAddr) ? find.addresses[find.metadata.toAddr] = true : '';
-  //   find.addresses[find.metadata.fromAddr] = true;
-
-  //   findings.push(find)
-  // }
-
-  // ! OLD FROM HERE TO END FILE
   return findings;
 };
 
