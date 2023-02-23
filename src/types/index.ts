@@ -12,5 +12,6 @@ export {
     SeaportOrder,
     ConsiderationItem,
     DecodedLogData,
-    BlurOrder
+    BlurOrder,
+    BatchContractInfo
 } from './types';

@@ -1,5 +1,5 @@
 import type { BigNumberish } from 'ethers';
-import type { NftTokenType } from 'alchemy-sdk';
+import type { NftTokenType, NftContract } from 'alchemy-sdk';
 import type { ColorResolvable } from 'discord.js';
 
 export interface CustomError extends Error {
@@ -15,6 +15,11 @@ export type ContractData = {
     symbol: string | undefined;
     tokenType: NftTokenType;
 };
+
+export type BatchContractInfo = {
+    address: string | undefined;
+    contractMetadata: NftContract;
+}
 
 export type TokenData = {
     name: string | null;

@@ -7,7 +7,7 @@ import type { BigNumberish } from 'ethers';
 import retry from 'async-retry';
 import { Network, Alchemy } from 'alchemy-sdk';
 import type { NftTokenType, GetFloorPriceResponse } from 'alchemy-sdk';
-import type { ContractData, CustomError, TokenData } from '../types';
+import type { ContractData, CustomError, TokenData, BatchContractInfo } from '../types';
 
 const ALCHEMY_API_KEY = process.env.ALCHEMY_API_KEY || '';
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || '';
@@ -160,7 +160,7 @@ const retryOnGetCollectionMetadata = async (
             if (response === null) {
                 throw new Error('Might hitting rate limit, try again');
             }
-        
+
             return {
                 openSea: _.get(response, 'openSea'),
                 looksRare: _.get(response, 'looksRare')
@@ -324,6 +324,39 @@ const getContractData = async (contractAddress: string) => {
     return contractData;
 };
 
+const getBatchContractData = async (contractAddresses: string[]): Promise<BatchContractInfo[]> => {
+    const options = {
+        method: 'POST',
+        headers: { accept: 'application/json', 'content-type': 'application/json' },
+        body: JSON.stringify({
+            contractAddresses: contractAddresses
+        })
+    };
+
+    const url = `
+        https://eth-mainnet.g.alchemy.com/nft/v2/${ALCHEMY_API_KEY}/getContractMetadataBatch
+    `;
+    const result = await retry(
+        async (bail) => {
+            const response = await fetch(url, options);
+            if (403 === response.status) {
+                // don't retry upon 403
+                bail(new Error('Unauthorized'));
+                return;
+              }
+          
+              const data = await response.json();
+              return data;
+        },
+        {
+            retries: 5
+        }
+    );
+
+    return result;
+};
+
+
 const shortenAddress = (address: string) => {
     if (!ethers.utils.isAddress(address)) {
         throw new Error('Not a valid address');
@@ -390,5 +423,6 @@ export {
     getContractData,
     getReadableName,
     getCollectionFloorPrice,
-    isContract
+    isContract,
+    getBatchContractData
 };
