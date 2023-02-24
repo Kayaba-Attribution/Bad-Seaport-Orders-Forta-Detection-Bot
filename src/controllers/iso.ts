@@ -19,6 +19,7 @@ import {
     FindingSeverity,
     FindingType,
     TransactionEvent,
+    EntityType
 } from "forta-agent";
 
 
@@ -100,36 +101,78 @@ async function transferIndexer(
     tx.from = await getReadableName(tx.fromAddr ?? '');
 
     tx.floor = contractData.contractMetadata.openSea?.floorPrice;
-    
+
     tx.tokenName = tx.contractName || `${tx.symbol} #${tx.tokenId}`;
     tx.usdPrice = (tx.currency.name === 'ETH' || tx.currency.name === 'WETH')
         ? await getEthUsdPrice(tx.totalPrice)
         : null;
     tx.ethUsdValue = tx.usdPrice ? `($ ${tx.usdPrice})` : '';
 
+    const { tokenName, contractName, market, totalPrice, currency, quantity, fromAddr, toAddr } = tx;
     if (tx) {
-        const { tokenName, contractName, market, totalPrice, currency, quantity, fromAddr, toAddr } = tx;
         console.log(`${quantity} ${contractName || tokenName} sold on ${market.displayName} for ${totalPrice} ${currency.name}`);
 
-        return Finding.fromObject({
-            name: "Seaport 1.1 ERC-721 Transfer",
-            description: `Bad Seaport Orders Forta Detection`,
-            alertId: "FORTA-1",
-            severity: FindingSeverity.Low,
-            type: FindingType.Info,
-            metadata: {
-                'quantity': quantity.toString(),
-                'contractName': contractName!,
-                'market': market.displayName,
-                'currency': currency?.name,
-                'price': totalPrice.toString(),
-                'fromAddr': fromAddr!,
-                'toAddr': toAddr!,
-                'tokenIds': tx.tokens!.toString(),
-                'collectionFloor': tx.floor!.toString(),
-            },
-        })
-
+        let itemPrice: number = totalPrice / quantity;
+        if (itemPrice < tx.floor! * 0.01) {
+            // Item price is under 1% of floor price
+            return Finding.fromObject({
+                name: "Seaport 1.1 ERC-721 Phishing Transfer",
+                description: `Bad Seaport Orders Forta Detection`,
+                alertId: "FORTA-1",
+                severity: FindingSeverity.Critical,
+                type: FindingType.Exploit,
+                metadata: {
+                    'contractName': contractName!,
+                    'quantity': quantity.toString(),
+                    'itemPrice': itemPrice.toString(),
+                    'collectionFloor': tx.floor!.toString(),
+                    'fromAddr': fromAddr!,
+                    'toAddr': toAddr!,
+                    'tokenIds': tx.tokens!.toString(),
+                    'market': market.displayName,
+                    'currency': currency?.name,
+                    'totalPrice': totalPrice.toString(),
+                    'hash': transactionHash
+                },
+                labels: [
+                    {
+                        entityType: EntityType.Address,
+                        entity: toAddr!,
+                        label: "attacker",
+                        confidence: 0.9,
+                        remove: false
+                    },
+                    {
+                        entityType: EntityType.Address,
+                        entity: fromAddr!,
+                        label: "victim",
+                        confidence: 0.9,
+                        remove: false
+                    }
+                ]
+            })
+        } else {
+            // Regular Transfer
+            return Finding.fromObject({
+                name: "Seaport 1.1 ERC-721 Transfer",
+                description: `Bad Seaport Orders Forta Detection`,
+                alertId: "FORTA-1",
+                severity: FindingSeverity.Low,
+                type: FindingType.Info,
+                metadata: {
+                    'contractName': contractName!,
+                    'quantity': quantity.toString(),
+                    'itemPrice': itemPrice.toString(),
+                    'collectionFloor': tx.floor!.toString(),
+                    'fromAddr': fromAddr!,
+                    'toAddr': toAddr!,
+                    'tokenIds': tx.tokens!.toString(),
+                    'market': market.displayName,
+                    'currency': currency?.name,
+                    'totalPrice': totalPrice.toString(),
+                },
+            })
+        }
     }
 };
 
