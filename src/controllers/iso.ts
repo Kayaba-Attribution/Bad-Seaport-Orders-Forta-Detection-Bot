@@ -31,7 +31,6 @@ const isSeaport = (
     return (decodedLogData as SeaportOrder).offer !== undefined;
 };
 
-
 async function transferIndexer(
     txEvent: TransactionEvent,
     contractData: BatchContractInfo
@@ -39,12 +38,17 @@ async function transferIndexer(
 
     const contractAddress: string = contractData.address!;
     const transactionHash: string = txEvent.transaction.hash;
+    console.log("hash: ", transactionHash)
 
     let recipient: string = txEvent.to ? txEvent.to : '';
 
+    // if recipient not in markets return []
+    if (!(recipient.toLowerCase() in markets)) {
+        return [];
+    }
+
     // ! Create a tx obeject with empty fields, which will be filled later on
     const tx = initializeTransactionData(transactionHash, contractData.contractMetadata, recipient, contractAddress);
-    const cancelEvents: Finding[] = [];
 
     for (const log of txEvent.logs) {
         const logAddress = log.address.toLowerCase();
@@ -56,22 +60,7 @@ async function transferIndexer(
         parseSaleToken(tx, log, logAddress);
 
         const isSale = logAddress === recipient && saleEventTypes.includes(log.topics[0]);
-
         const isCancel = cancelEventTypes.includes(log.topics[0])
-
-        if (isCancel) {
-            cancelEvents.push(Finding.fromObject({
-                name: "Seaport 1.1 ERC-721 Transfer",
-                description: `Seaport Orders Cancelled`,
-                alertId: "FORTA-1",
-                severity: FindingSeverity.Info,
-                type: FindingType.Info,
-            }));
-        }
-
-        if (cancelEvents.length === 1) {
-            return cancelEvents[0];
-        }
 
         if (isSale) {
             const marketLogDecoder = isSale
@@ -132,7 +121,8 @@ async function transferIndexer(
                     'market': market.displayName,
                     'currency': currency?.name,
                     'totalPrice': totalPrice.toString(),
-                    'hash': transactionHash
+                    'hash': transactionHash,
+                    'contractAddress': contractAddress
                 },
                 labels: [
                     {
@@ -160,6 +150,7 @@ async function transferIndexer(
                 severity: FindingSeverity.Low,
                 type: FindingType.Info,
                 metadata: {
+
                     'contractName': contractName!,
                     'quantity': quantity.toString(),
                     'itemPrice': itemPrice.toString(),
@@ -168,8 +159,10 @@ async function transferIndexer(
                     'toAddr': toAddr!,
                     'tokenIds': tx.tokens!.toString(),
                     'market': market.displayName,
-                    'currency': currency?.name,
+                    'currency': currency?.name || "ETH",
                     'totalPrice': totalPrice.toString(),
+                    'hash': transactionHash,
+                    'contractAddress': contractAddress
                 },
             })
         }

@@ -171,7 +171,7 @@ export type TransactionData = {
     tokenData?: TokenData;
     symbol: string | undefined;
     tokenType: NftTokenType;
-    contractName: string;
+    contractName: string | undefined;
     market: Market;
     marketList: Market[];
     currency: { name: string; decimals: number };

@@ -7,22 +7,32 @@ export const initializeTransactionData = (
     recipient: string,
     contractAddress: string
 ) => {
-    const tx: TransactionData = {
-        recipient: markets[recipient].name,
-        tokens: [],
-        prices: [],
-        totalPrice: 0,
-        quantity: 0,
-        symbol: contractData.symbol,
-        tokenType: contractData.tokenType,
-        contractName: contractData.name!,
-        marketList: [],
-        market: markets[recipient],
-        currency: { name: 'ETH', decimals: 18 },
-        contractAddress: contractAddress,
-        transactionHash: transactionHash,
-        seaportIdentifiers: []
-    };
+    console.log(contractAddress)
+    console.log(recipient)
+    console.log(contractData ? contractData.symbol : "no contract data")
+    console.log(markets[recipient.toLowerCase()] ? markets[recipient.toLowerCase()].name : "no market data")
+    let tx: TransactionData;
+    try {
+        tx = {
+            recipient: markets[recipient].name,
+            tokens: [],
+            prices: [],
+            totalPrice: 0,
+            quantity: 0,
+            symbol: contractData.symbol,
+            tokenType: contractData.tokenType,
+            contractName: contractData.name,
+            marketList: [],
+            market: markets[recipient],
+            currency: { name: 'ETH', decimals: 18 },
+            contractAddress: contractAddress,
+            transactionHash: transactionHash,
+            seaportIdentifiers: []
+        };
+    } catch (error) {
+        console.log("LOL", error)
+    }
 
-    return tx;
+
+    return tx!;
 };

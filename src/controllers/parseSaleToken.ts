@@ -19,6 +19,7 @@ const parseSaleToken = (tx: TransactionData, log: Log, logAddress: string) => {
         transferEventTypes.ERC1155.includes(log.topics[0]) &&
         logAddress === tx.contractAddress
     ) {
+        console.log("ERC1155")
         tx.fromAddr = String(Web3EthAbi.decodeParameter('address', log.topics[2]));
         tx.toAddr = String(Web3EthAbi.decodeParameter('address', log.topics[3]));
         const decodeData = Web3EthAbi.decodeLog(
@@ -30,7 +31,7 @@ const parseSaleToken = (tx: TransactionData, log: Log, logAddress: string) => {
             []
         );
         tx.tokenId = decodeData.id;
-        tx.tokens.push(Number(decodeData.value));
+        tx.tokens.push(Number(decodeData.id));
     }
 };
 
