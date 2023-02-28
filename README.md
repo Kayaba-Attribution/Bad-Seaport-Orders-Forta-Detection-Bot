@@ -84,7 +84,7 @@ Smallest Test: 16217012..16218814
 ```
 ### Multiple NFTs Phishing Transfer Detection on a single tx
 
-[3 Different Phishing NFTs Sale Detected](https://etherscan.io/tx/0x0f650996e73e4501a28333b79e18d487edd6f106c74e7d8f33a73ac807b4e8bb)
+(3 Different Phishing NFTs Sale Detected)[https://etherscan.io/tx/0x0f650996e73e4501a28333b79e18d487edd6f106c74e7d8f33a73ac807b4e8bb]
 
 + id 4564 FridayBeers for 0 ETH (floor is 0.012 ETH)
 + id 848 Hedz for 0 ETH (floor is 2.34 ETH)
