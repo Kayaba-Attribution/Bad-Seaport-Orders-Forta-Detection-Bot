@@ -30,7 +30,8 @@ const parseSaleToken = (tx: TransactionData, log: Log, logAddress: string) => {
             log.data,
             []
         );
-        tx.tokenId = decodeData.id;
+        tx.tokenId = decodeData.value;
+        console.log(tx.tokenId)
         tx.tokens.push(Number(decodeData.id));
     }
 };

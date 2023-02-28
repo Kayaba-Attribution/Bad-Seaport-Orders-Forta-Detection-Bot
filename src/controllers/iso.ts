@@ -79,7 +79,7 @@ async function transferIndexer(
         }
     }
 
-    tx.quantity = tx.tokenType === 'ERC721' ? tx.tokens.length : _.sum(tx.tokens);
+    tx.quantity = tx.tokenType === 'ERC721' ? tx.tokens.length : tx.tokens.length;
 
     if ((tx.quantity === 0)) {
         console.error(`\n No tokens found. for hash ${transactionHash}\n`);
@@ -105,7 +105,7 @@ async function transferIndexer(
         if (itemPrice < tx.floor! * 0.01) {
             // Item price is under 1% of floor price
             return Finding.fromObject({
-                name: "Seaport 1.1 ERC-721 Phishing Transfer",
+                name: `Seaport 1.1 ${tx.tokenType} Phishing Transfer`,
                 description: `Bad Seaport Orders Forta Detection`,
                 alertId: "FORTA-1",
                 severity: FindingSeverity.Critical,
@@ -144,7 +144,7 @@ async function transferIndexer(
         } else {
             // Regular Transfer
             return Finding.fromObject({
-                name: "Seaport 1.1 ERC-721 Transfer",
+                name: `Seaport 1.1 ${tx.tokenType} Transfer`,
                 description: `Bad Seaport Orders Forta Detection`,
                 alertId: "FORTA-1",
                 severity: FindingSeverity.Low,

@@ -82,9 +82,42 @@ Smallest Test: 16217012..16218814
 (fulfillAvailableAdvancedOrders example)[https://etherscan.io/tx/0xc98866c545690aa593c09c00614dfc7875d64ffe9b4aac1e1750bf260de2431e]
 ```bash
 ```
+
+(matchAdvancedOrders example)[https://etherscan.io/tx/0xf3963f4ce3c7207b0749ffd3539b7115b2176acd21eefca7e14e4cd1cd1f06d1]
+```bash
+1 findings for transaction 0xf3963f4ce3c7207b0749ffd3539b7115b2176acd21eefca7e14e4cd1cd1f06d1 {
+  "name": "Seaport 1.1 ERC-1155 Transfer",
+  "description": "Bad Seaport Orders Forta Detection",
+  "alertId": "FORTA-1",
+  "protocol": "ethereum",
+  "severity": "Low",
+  "type": "Info",
+  "metadata": {
+    "contractName": "VoxSoulsLunchboxes",
+    "quantity": "4",
+    "itemPrice": "0.0125",
+    "collectionFloor": "0.064425",
+    "fromAddr": "0xaDE97d752fe7D7f448143Ba464a5AaF4aF021C03",
+    "toAddr": "0x9fC175Cc60E49FdE20b9Ed820eF9a2f866cdc36F",
+    "tokenIds": "4",
+    "market": "Opensea 🌊",
+    "currency": "WETH",
+    "totalPrice": "0.05",
+    "hash": "0xf3963f4ce3c7207b0749ffd3539b7115b2176acd21eefca7e14e4cd1cd1f06d1",
+    "contractAddress": "0xdffc286a5310d829783211035e47cdec12ddacca"
+  },
+  "addresses": [
+    "0x9fc175cc60e49fde20b9ed820ef9a2f866cdc36f",
+    "0xade97d752fe7d7f448143ba464a5aaf4af021c03",
+    "0xdffc286a5310d829783211035e47cdec12ddacca",
+    "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+  ],
+  "labels": []
+}
+```
 ### Multiple NFTs Phishing Transfer Detection on a single tx
 
-(3 Different Phishing NFTs Sale Detected)[https://etherscan.io/tx/0x0f650996e73e4501a28333b79e18d487edd6f106c74e7d8f33a73ac807b4e8bb]
+[3 Different Phishing NFTs Sale Detected](https://etherscan.io/tx/0x0f650996e73e4501a28333b79e18d487edd6f106c74e7d8f33a73ac807b4e8bb)
 
 + id 4564 FridayBeers for 0 ETH (floor is 0.012 ETH)
 + id 848 Hedz for 0 ETH (floor is 2.34 ETH)
