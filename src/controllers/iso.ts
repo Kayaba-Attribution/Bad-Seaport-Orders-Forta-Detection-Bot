@@ -79,7 +79,7 @@ async function transferIndexer(
         }
     }
 
-    tx.quantity = tx.tokenType === 'ERC721' ? tx.tokens.length : tx.tokens.length;
+    tx.quantity = tx.tokenType === 'ERC721' ? tx.tokens.length : _.sum(tx.tokens);
 
     if ((tx.quantity === 0)) {
         console.error(`\n No tokens found. for hash ${transactionHash}\n`);
@@ -102,6 +102,7 @@ async function transferIndexer(
         console.log(`${quantity} ${contractName || tokenName} sold on ${market.displayName} for ${totalPrice} ${currency.name}`);
 
         let itemPrice: number = totalPrice / quantity;
+        
         if (itemPrice < tx.floor! * 0.01) {
             // Item price is under 1% of floor price
             return Finding.fromObject({
@@ -117,7 +118,7 @@ async function transferIndexer(
                     'collectionFloor': tx.floor!.toString(),
                     'fromAddr': fromAddr!,
                     'toAddr': toAddr!,
-                    'tokenIds': tx.tokens!.toString(),
+                    'tokenIds': tx.tokenType === 'ERC721' ? tx.tokens!.toString() : tx.tokenId!,
                     'market': market.displayName,
                     'currency': currency?.name,
                     'totalPrice': totalPrice.toString(),
@@ -157,7 +158,7 @@ async function transferIndexer(
                     'collectionFloor': tx.floor!.toString(),
                     'fromAddr': fromAddr!,
                     'toAddr': toAddr!,
-                    'tokenIds': tx.tokens!.toString(),
+                    'tokenIds': tx.tokenType === 'ERC721' ? tx.tokens!.toString() : tx.tokenId!,
                     'market': market.displayName,
                     'currency': currency?.name || "ETH",
                     'totalPrice': totalPrice.toString(),

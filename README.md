@@ -2,12 +2,11 @@
 
 ## Description
 
-This agent detects transactions with large Tether transfers
+This agent detects all ERC-721 & ERC-1155 Sales on Opensea Seaport 1.1, the main objective is to find, label, and compare sales related to phishing scams were users lose their NFTs very low amounts and the attacker sells them close to the collection floor price.
 
 ## Supported Chains
 
 - Ethereum
-- List any other chains this agent can support e.g. BSC
 
 ## Alerts
 
@@ -29,10 +28,59 @@ The agent behaviour can be verified with the following transactions:
 
 [example etherscan nft changes](https://etherscan.io/nft/0xae99a698156ee8f8d07cbe7f271c31eeaac07087/6262)
 
-Blocks Span: 16217012 - 16219118
+Blocks Span: 16217012..16219118
 Smallest Test: 16217012..16218814
 
 16217012 [Attacker gets 5 MHC (6262,6696,8273,9791,9911) for 0.001 ETH](https://etherscan.io/tx/0x4fff109d9a6c030fce4de9426229a113524903f0babd6de11ee6c046d07226ff)
+
+### Bot detects sale of tokens for <0.01% of collection floor
+
+```bash
+1 findings for transaction 0x4fff109d9a6c030fce4de9426229a113524903f0babd6de11ee6c046d07226ff {
+  "name": "Seaport 1.1 ERC721 Phishing Transfer",
+  "description": "Bad Seaport Orders Forta Detection",
+  "alertId": "FORTA-1",
+  "protocol": "ethereum",
+  "severity": "Critical",
+  "type": "Exploit",
+  "metadata": {
+    "contractName": "Mutant Hound Collars",
+    "quantity": "5",
+    "itemPrice": "0.0002",
+    "collectionFloor": "0.58",
+    "fromAddr": "0x08395C15C21DC3534B1C3b1D4FA5264E5Bd7020C",
+    "toAddr": "0xBF96d79074b269F75c20BD9fa6DAed0773209EE7",
+    "tokenIds": "6262,6696,8273,9791,9911",
+    "market": "Opensea 🌊",
+    "currency": "ETH",
+    "totalPrice": "0.001",
+    "hash": "0x4fff109d9a6c030fce4de9426229a113524903f0babd6de11ee6c046d07226ff",
+    "contractAddress": "0xae99a698156ee8f8d07cbe7f271c31eeaac07087"
+  },
+  "addresses": [
+    "0xbf96d79074b269f75c20bd9fa6daed0773209ee7",
+    "0x08395c15c21dc3534b1c3b1d4fa5264e5bd7020c",
+    "0xaefc35de05da370f121998b0e2e95698841de9b1",
+    "0xae99a698156ee8f8d07cbe7f271c31eeaac07087"
+  ],
+  "labels": [
+    {
+      "entityType": "Address",
+      "entity": "0xBF96d79074b269F75c20BD9fa6DAed0773209EE7",
+      "label": "attacker",
+      "confidence": 0.9,
+      "remove": false
+    },
+    {
+      "entityType": "Address",
+      "entity": "0x08395C15C21DC3534B1C3b1D4FA5264E5Bd7020C",
+      "label": "victim",
+      "confidence": 0.9,
+      "remove": false
+    }
+  ]
+}
+```
 
 16219118 [Attacker sells 1 MHC (6262) for 0.579 ETH](https://etherscan.io/tx/0xdc6fd3c2846f330aec65615341789397e1a9bb37a471851fe68b2db20a5a7b9f)
 
@@ -46,7 +94,7 @@ Smallest Test: 16217012..16218814
 
 ### Regular OpenSea Sales
 
-(fulfillBasicOrder example)[https://etherscan.io/tx/0x52d8e0c43d0b6a7a62ee8bf2c57afd7ad7ccc931d41f35b4844d7720a8675d75]
+[fulfillBasicOrder example](https://etherscan.io/tx/0x52d8e0c43d0b6a7a62ee8bf2c57afd7ad7ccc931d41f35b4844d7720a8675d75)
 ```bash
 1 findings for transaction 0x52d8e0c43d0b6a7a62ee8bf2c57afd7ad7ccc931d41f35b4844d7720a8675d75 {
   "name": "Seaport 1.1 ERC-721 Transfer",
@@ -79,11 +127,42 @@ Smallest Test: 16217012..16218814
 }
 ```
 
-(fulfillAvailableAdvancedOrders example)[https://etherscan.io/tx/0xc98866c545690aa593c09c00614dfc7875d64ffe9b4aac1e1750bf260de2431e]
+
+[fulfillAvailableAdvancedOrders example](https://etherscan.io/tx/0x8aaa46e39e3a071a6db95b00e59a146b48250a18c249c2ade0a408860e667c00)
 ```bash
+1 findings for transaction 0x8aaa46e39e3a071a6db95b00e59a146b48250a18c249c2ade0a408860e667c00 {
+  "name": "Seaport 1.1 ERC721 Transfer",
+  "description": "Bad Seaport Orders Forta Detection",
+  "alertId": "FORTA-1",
+  "protocol": "ethereum",
+  "severity": "Low",
+  "type": "Info",
+  "metadata": {
+    "contractName": "Base, Introduced",
+    "quantity": "3",
+    "itemPrice": "0.00278",
+    "collectionFloor": "0",
+    "fromAddr": "0x89ce8A6fa1d9d95ef1D8123c02C8e7C3e8d38125",
+    "toAddr": "0x3810e63ABDF61cc83f676000118A877eC1BA58d0",
+    "tokenIds": "216105,166849,166852",
+    "market": "Opensea 🌊",
+    "currency": "ETH",
+    "totalPrice": "0.00834",
+    "hash": "0x8aaa46e39e3a071a6db95b00e59a146b48250a18c249c2ade0a408860e667c00",
+    "contractAddress": "0xd4307e0acd12cf46fd6cf93bc264f5d5d1598792"
+  },
+  "addresses": [
+    "0x3810e63abdf61cc83f676000118a877ec1ba58d0",
+    "0x89ce8a6fa1d9d95ef1d8123c02c8e7c3e8d38125",
+    "0xd4307e0acd12cf46fd6cf93bc264f5d5d1598792"
+  ],
+  "labels": []
+}
 ```
 
-(matchAdvancedOrders example)[https://etherscan.io/tx/0xf3963f4ce3c7207b0749ffd3539b7115b2176acd21eefca7e14e4cd1cd1f06d1]
+
+
+[matchAdvancedOrders example](https://etherscan.io/tx/0xf3963f4ce3c7207b0749ffd3539b7115b2176acd21eefca7e14e4cd1cd1f06d1)
 ```bash
 1 findings for transaction 0xf3963f4ce3c7207b0749ffd3539b7115b2176acd21eefca7e14e4cd1cd1f06d1 {
   "name": "Seaport 1.1 ERC-1155 Transfer",
@@ -94,7 +173,7 @@ Smallest Test: 16217012..16218814
   "type": "Info",
   "metadata": {
     "contractName": "VoxSoulsLunchboxes",
-    "quantity": "4",
+    "quantity": "1",
     "itemPrice": "0.0125",
     "collectionFloor": "0.064425",
     "fromAddr": "0xaDE97d752fe7D7f448143Ba464a5AaF4aF021C03",

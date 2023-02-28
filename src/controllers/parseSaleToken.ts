@@ -30,9 +30,11 @@ const parseSaleToken = (tx: TransactionData, log: Log, logAddress: string) => {
             log.data,
             []
         );
-        tx.tokenId = decodeData.value;
+        console.log(tx.tokenId === undefined)
+        tx.tokenId === undefined ? tx.tokenId = decodeData.id : tx.tokenId += `,${decodeData.id}`;
+
         console.log(tx.tokenId)
-        tx.tokens.push(Number(decodeData.id));
+        tx.tokens.push(Number(decodeData.value));
     }
 };
 
