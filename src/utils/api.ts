@@ -8,6 +8,7 @@ import retry from 'async-retry';
 import { Network, Alchemy } from 'alchemy-sdk';
 import type { NftTokenType, GetFloorPriceResponse } from 'alchemy-sdk';
 import type { ContractData, CustomError, TokenData, BatchContractInfo } from '../types';
+import fs from 'fs';
 
 const ALCHEMY_API_KEY = process.env.ALCHEMY_API_KEY || '';
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || '';
@@ -249,7 +250,6 @@ const getBatchContractData = async (contractAddresses: string[]): Promise<BatchC
             retries: 5
         }
     );
-
     return result;
 };
 

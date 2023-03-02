@@ -35,7 +35,8 @@
     "forta-agent": "^0.1.18",
     "jimp-compact": "^0.16.1-2",
     "lodash": "^4.17.21",
-    "web3-eth-abi": "^1.7.4"
+    "web3-eth-abi": "^1.7.4",
+    "whatwg-fetch": "^3.6.2"
   },
   "devDependencies": {
     "@types/async-retry": "^1.4.5",

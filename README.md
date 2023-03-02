@@ -340,3 +340,9 @@ Smallest Test: 16217012..16218814
   ]
 }
 ```
+
+Test txEvent fields Needed:
++ hash
++ to
++ logs
++ addresses

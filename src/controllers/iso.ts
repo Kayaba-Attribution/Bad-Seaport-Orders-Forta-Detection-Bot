@@ -36,9 +36,9 @@ async function transferIndexer(
     contractData: BatchContractInfo
 ) {
 
+    console.log("transferIndexer Running...")
     const contractAddress: string = contractData.address!;
     const transactionHash: string = txEvent.transaction.hash;
-    console.log("hash: ", transactionHash)
 
     let recipient: string = txEvent.to ? txEvent.to : '';
 
@@ -48,8 +48,10 @@ async function transferIndexer(
     }
 
     // ! Create a tx obeject with empty fields, which will be filled later on
-    const tx = initializeTransactionData(transactionHash, contractData.contractMetadata, recipient, contractAddress);
 
+    const tx = initializeTransactionData(transactionHash, contractData.contractMetadata, recipient, contractAddress);
+    console.log("test")
+    
     for (const log of txEvent.logs) {
         const logAddress = log.address.toLowerCase();
         const logMarket = _.get(markets, logAddress);

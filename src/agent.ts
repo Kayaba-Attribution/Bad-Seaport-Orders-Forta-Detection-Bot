@@ -1,33 +1,28 @@
 import {
-  BlockEvent,
   Finding,
-  Initialize,
-  HandleBlock,
   HandleTransaction,
-  HandleAlert,
-  AlertEvent,
   TransactionEvent,
   FindingSeverity,
   FindingType,
   EntityType
 } from "forta-agent";
 
-import type { ContractData, BatchContractInfo } from './types';
-import { getContractData } from './utils/api.js';
+import type { BatchContractInfo } from './types';
+import { getBatchContractData } from './utils/api.js';
 import { transferIndexer } from './controllers/iso.js';
-import { add } from "lodash";
 
 export const SEAPORT_ADDRESS = '0x00000000006c3852cbef3e08e8df289169ede581';
+import fs from 'fs';
+
 
 // !MINE
 let findingsCount = 0;
 let nftContractsData: BatchContractInfo[] = [];
 
-import { isContract, getBatchContractData, getEthUsdPrice } from './utils/api.js';
 
 const storage: Finding[] = [];
 
-const findingSearch = (find: Finding) => {
+export const findingSearch = (find: Finding) => {
 
   let newFinding: Finding;
 
@@ -89,21 +84,28 @@ const findingSearch = (find: Finding) => {
 }
 
 const handleTransaction: HandleTransaction = async (
-  txEvent: TransactionEvent
+  txEvent: TransactionEvent,
+  testData?: BatchContractInfo[]
 ) => {
   const findings: Finding[] = [];
 
+  //fs.writeFileSync('test.json', JSON.stringify(txEvent, null, 2));
 
   // Only intersted on Seaport if not present return 0 findings.
   // Do not run Alchemy API calls on OpenSea Contract.
+  console.log("Seaport Transfer", txEvent.addresses)
   if (!txEvent.addresses.hasOwnProperty(SEAPORT_ADDRESS)) { return findings } else { delete txEvent.addresses[SEAPORT_ADDRESS] }
-
   // limiting this agent to emit only 5 findings so that the alert feed is not spammed
   //if (findingsCount >= 5) return findings;
 
   // Retrieve metadata from other addresses included, goal is get the info of the NFTs
   // API returns {} for EOA or UNKNOWN for contracts that are not ERC721 or ERC1155 standards.
-  nftContractsData = await getBatchContractData(Object.keys(txEvent.addresses));
+  if (!testData){
+    nftContractsData = await getBatchContractData(Object.keys(txEvent.addresses));
+  } else {
+    console.log("Test Data Loaded")
+    nftContractsData = testData;
+  }
 
   for (const info of nftContractsData) {
 
@@ -138,25 +140,10 @@ const handleTransaction: HandleTransaction = async (
   return findings;
 };
 
-// const initialize: Initialize = async () => {
-//   // do some initialization on startup e.g. fetch data
-// }
-
-// const handleBlock: HandleBlock = async (blockEvent: BlockEvent) => {
-//   const findings: Finding[] = [];
-//   // detect some block condition
-//   return findings;
-// }
-
-// const handleAlert: HandleAlert = async (alertEvent: AlertEvent) => {
-//   const findings: Finding[] = [];
-//   // detect some alert condition
-//   return findings;
-// }
-
 export default {
   // initialize,
   handleTransaction,
+  transferIndexer
   // handleBlock,
   // handleAlert
 };
