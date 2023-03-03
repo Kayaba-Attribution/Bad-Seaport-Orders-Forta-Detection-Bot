@@ -7,17 +7,9 @@ import {
     TransactionEvent
 } from "forta-agent";
 
+import agent from "./agent";
 import Web3EthAbi from 'web3-eth-abi';
-
-
 import { NftTokenType, OpenSeaCollectionMetadata } from 'alchemy-sdk';
-
-import agent, {
-    findingSearch,
-    SEAPORT_ADDRESS,
-} from "./agent";
-
-import { transferIndexer } from "./controllers/iso.js";
 import type { BatchContractInfo } from './types';
 
 const openSeaLogJSON = [
@@ -79,7 +71,6 @@ const openSeaLogJSON = [
     }
 ]
 
-// returns an object of type BatchContractInfo (nft contract data using Alchemy API)
 const createBatchContractInfo = (
     address: string,
     name: string,
@@ -213,40 +204,41 @@ const createBatchContractInfo = (
 };
 
 
+function createRandomAddress(): string {
+    let r = (Math.random() + 1).toString(36).substring(7);
+    return ethers.Wallet.createRandom([r]).address.toLowerCase();
+}
+
 
 type HandleTransaction = (txEvent: TransactionEvent, test?: BatchContractInfo[]) => Promise<Finding[]>;
 jest.setTimeout(60000)
 describe("high tether transfer agent", () => {
     let handleTransaction: HandleTransaction;
-    const mockTxEvent = createTransactionEvent({} as any);
+    let victim: string;
+    let attacker: string;
+    let bob: string;
+    let alice: string;
 
     beforeAll(() => {
         handleTransaction = agent.handleTransaction;
+        victim = createRandomAddress();
+        attacker = createRandomAddress();
+        bob = createRandomAddress();
+        alice = createRandomAddress();
     });
 
-    describe("handleTransaction", () => {
-        // it("returns empty findings if there are no OpenSea Sales", async () => {
-
-        //     const findings = await handleTransaction(mockTxEvent);
-
-        //     expect(findings).toStrictEqual([]);
-        // });
-
+    describe("returns an informational finding for regular NFTs transfer", () => {
         it("returns a finding", async () => {
-
-
-            let victim: any = ethers.Wallet.createRandom(['777']);
-            let attacker: any = ethers.Wallet.createRandom(['666']);
-            console.log(victim.address);
+            let randomContract = createRandomAddress();
             let [mockApi, criticalEvent] = createBatchContractInfo(
-                '0x0000000000000000000000000000000000000777',
+                randomContract,
                 'TestNFT',
                 'TST',
                 '100',
                 'ERC721',
                 10,
-                victim.address,
-                attacker.address,
+                victim,
+                attacker,
                 ['1', '2']
             )
             const findings = await handleTransaction(criticalEvent, mockApi);

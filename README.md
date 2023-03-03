@@ -346,3 +346,10 @@ Test txEvent fields Needed:
 + to
 + logs
 + addresses
+
+## Test Data
+
+The agent behaviour can be verified with the following transactions:
+
+- 0x0e70d96ca35e9f102fba78fbcaf60b49c8e4229e3e675ce498485054f2d3b4cf
+- 0xc57a28a4bd32996005bff6337b6143a17559b7f02d5f68718689a29e01961f53

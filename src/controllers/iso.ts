@@ -19,11 +19,8 @@ import {
     FindingSeverity,
     FindingType,
     TransactionEvent,
-    EntityType
+    EntityType,
 } from "forta-agent";
-
-
-
 
 const isSeaport = (
     decodedLogData: DecodedLogData | SeaportOrder
@@ -114,13 +111,15 @@ async function transferIndexer(
         console.log(`${quantity} ${contractName || tokenName} sold on ${market.displayName} for ${totalPrice} ${currency.name}`);
 
         let itemPrice: number = totalPrice / quantity;
+        let tokenIds_ = tx.tokenType === 'ERC721' ? tx.tokens!.toString() : tx.tokenId!;
+        let alertId_ = utils.keccak256(utils.toUtf8Bytes(transactionHash + contractAddress))
         
         if (itemPrice < tx.floor! * 0.01) {
             // Item price is under 1% of floor price
             return Finding.fromObject({
                 name: `Seaport 1.1 ${tx.tokenType} Phishing Transfer`,
-                description: `Bad Seaport Orders Forta Detection`,
-                alertId: "FORTA-1",
+                description: `${quantity} ${contractName || tokenName} ids: ${tokenIds_} sold on ${market.displayName} for ${totalPrice} ${currency.name} with a floor price of ${tx.floor} ${currency.name}`,
+                alertId: alertId_,
                 severity: FindingSeverity.Critical,
                 type: FindingType.Exploit,
                 metadata: {
@@ -130,7 +129,7 @@ async function transferIndexer(
                     'collectionFloor': tx.floor!.toString(),
                     'fromAddr': fromAddr!,
                     'toAddr': toAddr!,
-                    'tokenIds': tx.tokenType === 'ERC721' ? tx.tokens!.toString() : tx.tokenId!,
+                    'tokenIds': tokenIds_,
                     'market': market.displayName,
                     'currency': currency?.name,
                     'totalPrice': totalPrice.toString(),
@@ -151,6 +150,13 @@ async function transferIndexer(
                         label: "victim",
                         confidence: 0.9,
                         remove: false
+                    },
+                    {
+                        entityType: EntityType.Unknown,
+                        entity: tokenIds_,
+                        label: "Stolen NFTs Ids",
+                        confidence: 0.9,
+                        remove: false
                     }
                 ]
             })
@@ -158,8 +164,8 @@ async function transferIndexer(
             // Regular Transfer
             return Finding.fromObject({
                 name: `Seaport 1.1 ${tx.tokenType} Transfer`,
-                description: `Bad Seaport Orders Forta Detection`,
-                alertId: "FORTA-1",
+                description: `Regular NFT Transfer`,
+                alertId: alertId_,
                 severity: FindingSeverity.Low,
                 type: FindingType.Info,
                 metadata: {
@@ -170,7 +176,7 @@ async function transferIndexer(
                     'collectionFloor': tx.floor!.toString(),
                     'fromAddr': fromAddr!,
                     'toAddr': toAddr!,
-                    'tokenIds': tx.tokenType === 'ERC721' ? tx.tokens!.toString() : tx.tokenId!,
+                    'tokenIds': tokenIds_,
                     'market': market.displayName,
                     'currency': currency?.name || "ETH",
                     'totalPrice': totalPrice.toString(),
