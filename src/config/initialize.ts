@@ -12,7 +12,7 @@ export const initializeTransactionData = (
     //console.log(contractData ? contractData.symbol : "no contract data")
     //console.log(markets[recipient.toLowerCase()] ? markets[recipient.toLowerCase()].name : "no market data")
     let tx: TransactionData;
-    console.log("ini")
+    console.log("initializeTransactionData running...")
     try {
         tx = {
             recipient: markets[recipient].name,
@@ -33,7 +33,7 @@ export const initializeTransactionData = (
     } catch (error) {
         console.log("LOL", error)
     }
-    console.log(tx!)
+    //console.log(tx!)
 
     return tx!;
 };

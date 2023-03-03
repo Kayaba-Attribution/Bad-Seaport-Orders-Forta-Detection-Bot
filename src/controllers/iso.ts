@@ -50,7 +50,7 @@ async function transferIndexer(
     // ! Create a tx obeject with empty fields, which will be filled later on
 
     const tx = initializeTransactionData(transactionHash, contractData.contractMetadata, recipient, contractAddress);
-    console.log("test")
+    //console.log("txEvent.logs:", txEvent.logs)
     
     for (const log of txEvent.logs) {
         const logAddress = log.address.toLowerCase();
@@ -63,16 +63,26 @@ async function transferIndexer(
 
         const isSale = logAddress === recipient && saleEventTypes.includes(log.topics[0]);
         const isCancel = cancelEventTypes.includes(log.topics[0])
-
+        //console.log("isSale:", isSale)
+        //console.log(logAddress, recipient, saleEventTypes.includes(log.topics[0]))
         if (isSale) {
             const marketLogDecoder = isSale
                 ? tx.market.logDecoder
                 : markets[logAddress as keyof typeof markets].logDecoder;
 
-            if (marketLogDecoder === undefined) return null;
+            if (marketLogDecoder === undefined){
+                console.log("marketLogDecoder is undefined")
+                return null;
+            } 
 
             const decodedLogData = Web3EthAbi.decodeLog(marketLogDecoder, log.data, []);
-
+            // if(log.data !== "0x") {
+            //     console.log('\n\n -------------- \n\n')
+            //     console.log("log:", log.data)
+            //     console.log("decoded:", decodedLogData)
+            //     console.log("marketLogDecoder:", marketLogDecoder)
+            //     console.log('\n\n -------------- \n\n')
+            // }
             if (isSeaport(decodedLogData)) {
                 const parseResult = parseSeaport(tx, log, logMarket, decodedLogData);
 

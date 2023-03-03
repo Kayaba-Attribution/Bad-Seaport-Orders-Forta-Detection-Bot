@@ -7,7 +7,7 @@ import {
     TransactionEvent
 } from "forta-agent";
 
-import 'whatwg-fetch'
+import Web3EthAbi from 'web3-eth-abi';
 
 
 import { NftTokenType, OpenSeaCollectionMetadata } from 'alchemy-sdk';
@@ -20,6 +20,65 @@ import agent, {
 import { transferIndexer } from "./controllers/iso.js";
 import type { BatchContractInfo } from './types';
 
+const openSeaLogJSON = [
+    {
+        type: 'bytes32',
+        name: 'orderHash'
+    },
+    {
+        type: 'address',
+        name: 'recipient'
+    },
+    {
+        type: 'tuple[]',
+        name: 'offer',
+        components: [
+            {
+                type: 'uint8',
+                name: 'itemType'
+            },
+            {
+                type: 'address',
+                name: 'token'
+            },
+            {
+                type: 'uint256',
+                name: 'identifier'
+            },
+            {
+                type: 'uint256',
+                name: 'amount'
+            }
+        ]
+    },
+    {
+        type: 'tuple[]',
+        name: 'consideration',
+        components: [
+            {
+                type: 'uint8',
+                name: 'itemType'
+            },
+            {
+                type: 'address',
+                name: 'token'
+            },
+            {
+                type: 'uint256',
+                name: 'identifier'
+            },
+            {
+                type: 'uint256',
+                name: 'amount'
+            },
+            {
+                type: 'address',
+                name: 'recipient'
+            }
+        ]
+    }
+]
+
 // returns an object of type BatchContractInfo (nft contract data using Alchemy API)
 const createBatchContractInfo = (
     address: string,
@@ -27,15 +86,18 @@ const createBatchContractInfo = (
     symbol: string,
     totalSupply: string,
     tokenType: string,
-    floorPrice: number
-): BatchContractInfo[] => {
-    let res: BatchContractInfo[] = [];
+    floorPrice: number,
+    from: string,
+    to: string,
+    tokenId: string
+): [BatchContractInfo[], TransactionEvent] => {
+    let mockApiDataArray: BatchContractInfo[] = [];
 
     const mockOpenSeaCollectionMetadata: OpenSeaCollectionMetadata = {
         floorPrice: floorPrice,
     }
 
-    let mockApiData: BatchContractInfo = {
+    const mockApiData: BatchContractInfo = {
         address: address,
         contractMetadata: {
             name: name,
@@ -48,10 +110,79 @@ const createBatchContractInfo = (
             address: address,
         }
     }
+    const SeaPortOrderData: string = Web3EthAbi.encodeParameters(openSeaLogJSON,
+        [
+            '0x1b258db8d5c9f6842b522df8b87715dbb2827e1b1f761ca7ca06d01c3baa9ae3', // orderHash
+            '0x00000000006c3852cbef3e08e8df289169ede581', // recipient
+            [ // OFFER
+                {
+                    itemType: '0x0', // itemType
+                    token: address,// token
+                    identifier: '0x0', // identifier
+                    amount: '1000000000000000' // amount
+                }
+            ],
+            [
+                {
+                    itemType: '0x0', // itemType
+                    token: '0x0000000000000000000000000000000000000000',// token
+                    identifier: '0x0', // identifier
+                    amount: '1000000000000000', // amount
+                    recipient: '0x00000000006c3852cbef3e08e8df289169ede581'
+                }
+            ]
 
-    res.push(mockApiData);
+        ]
+    )
+    console.log(SeaPortOrderData)
+    const mockEvent = createTransactionEvent(
+        {
+            transaction: {
+                hash: '0x1234',
+                to: '0x00000000006c3852cbef3e08e8df289169ede581'
+            },
+            addresses: {
+                '0x00000000006c3852cbef3e08e8df289169ede581': true,
+                address: true
+            },
+            logs: [
+                {
+                    "address": '0x00000000006c3852cbef3e08e8df289169ede581',
+                    "topics": [
+                        "0x9d9af8e38d66c62e2c12f0225249fd9d721c54b83f48d9352c97c6cacdcb6f31",
+                        Web3EthAbi.encodeParameter('address', from),
+                        Web3EthAbi.encodeParameter('address', to),
+                    ],
+                    "data": SeaPortOrderData,
+                    "logIndex": 71,
+                    "blockNumber": 16217012,
+                    "blockHash": "0x4b1f94a7fc5ca5bb74bde07406c1187b0d4dc12c4aacb11972cf2e7fe5fc9608",
+                    "transactionIndex": 39,
+                    "transactionHash": "0x1234",
+                    "removed": false
+                },
+                {
+                    "address": address,
+                    "topics": [
+                        "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+                        Web3EthAbi.encodeParameter('address', from),
+                        Web3EthAbi.encodeParameter('address', to),
+                        Web3EthAbi.encodeParameter('uint256', tokenId),
+                    ],
+                    "data": "0x",
+                    "logIndex": 72,
+                    "blockNumber": 16217012,
+                    "blockHash": "0x4b1f94a7fc5ca5bb74bde07406c1187b0d4dc12c4aacb11972cf2e7fe5fc9608",
+                    "transactionIndex": 40,
+                    "transactionHash": "0x1234",
+                    "removed": false
+                }
+            ]
+        } as any);
 
-    return res;
+    mockApiDataArray.push(mockApiData);
+
+    return [mockApiDataArray, mockEvent];
 };
 
 
@@ -75,48 +206,23 @@ describe("high tether transfer agent", () => {
         // });
 
         it("returns a finding", async () => {
-            const criticalEvent = createTransactionEvent(
-                {
-                    transaction: {
-                        hash: '0x1234',
-                        to: SEAPORT_ADDRESS
-                    },
-                    addresses: {
-                        '0x00000000006c3852cbef3e08e8df289169ede581': true,
-                        '0x1': true
-                    },
-                    logs: [
-                        {
-                            "address": "0x111",
-                            "topics": [
-                                "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
-                                "0x00000000000000000000000008395c15c21dc3534b1c3b1d4fa5264e5bd7020c",
-                                "0x000000000000000000000000bf96d79074b269f75c20bd9fa6daed0773209ee7",
-                                "0x0000000000000000000000000000000000000000000000000000000000000001"
-                            ],
-                            "data": "0x576b9b7de07c6332ddd0b627851cb0c4e943542ac61e83bffb91f2363521d96e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000032000000000000000000000000000000000000000000000000000000000000000050000000000000000000000000000000000000000000000000000000000000002000000000000000000000000ae99a698156ee8f8d07cbe7f271c31eeaac07087000000000000000000000000000000000000000000000000000000000000187600000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000002000000000000000000000000ae99a698156ee8f8d07cbe7f271c31eeaac070870000000000000000000000000000000000000000000000000000000000001a2800000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000002000000000000000000000000ae99a698156ee8f8d07cbe7f271c31eeaac07087000000000000000000000000000000000000000000000000000000000000205100000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000002000000000000000000000000ae99a698156ee8f8d07cbe7f271c31eeaac07087000000000000000000000000000000000000000000000000000000000000263f00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000002000000000000000000000000ae99a698156ee8f8d07cbe7f271c31eeaac0708700000000000000000000000000000000000000000000000000000000000026b7000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000070000000000000000000000000000000000000000000000000000000000000002000000000000000000000000ae99a698156ee8f8d07cbe7f271c31eeaac0708700000000000000000000000000000000000000000000000000000000000018760000000000000000000000000000000000000000000000000000000000000001000000000000000000000000bf96d79074b269f75c20bd9fa6daed0773209ee70000000000000000000000000000000000000000000000000000000000000002000000000000000000000000ae99a698156ee8f8d07cbe7f271c31eeaac070870000000000000000000000000000000000000000000000000000000000001a280000000000000000000000000000000000000000000000000000000000000001000000000000000000000000bf96d79074b269f75c20bd9fa6daed0773209ee70000000000000000000000000000000000000000000000000000000000000002000000000000000000000000ae99a698156ee8f8d07cbe7f271c31eeaac0708700000000000000000000000000000000000000000000000000000000000020510000000000000000000000000000000000000000000000000000000000000001000000000000000000000000bf96d79074b269f75c20bd9fa6daed0773209ee70000000000000000000000000000000000000000000000000000000000000002000000000000000000000000ae99a698156ee8f8d07cbe7f271c31eeaac07087000000000000000000000000000000000000000000000000000000000000263f0000000000000000000000000000000000000000000000000000000000000001000000000000000000000000bf96d79074b269f75c20bd9fa6daed0773209ee70000000000000000000000000000000000000000000000000000000000000002000000000000000000000000ae99a698156ee8f8d07cbe7f271c31eeaac0708700000000000000000000000000000000000000000000000000000000000026b70000000000000000000000000000000000000000000000000000000000000001000000000000000000000000bf96d79074b269f75c20bd9fa6daed0773209ee7000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000376c1e0a7f00000000000000000000000000008395c15c21dc3534b1c3b1d4fa5264e5bd7020c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000016bcc41e90000000000000000000000000000000a26b00c1f0df003000390027140000faa719",
-                            "logIndex": 72,
-                            "blockNumber": 16217012,
-                            "blockHash": "0x4b1f94a7fc5ca5bb74bde07406c1187b0d4dc12c4aacb11972cf2e7fe5fc9608",
-                            "transactionIndex": 40,
-                            "transactionHash": "0x1234",
-                            "removed": false
-                        }
-                    ]
-                } as any);
 
 
-            //console.log(criticalEvent);
-            const findings = await handleTransaction(criticalEvent,
-                createBatchContractInfo(
-                    '0x111',
-                    'TestNFT',
-                    'TST',
-                    '100',
-                    'ERC721',
-                    10
-                )
-            );
+            let victim: any = ethers.Wallet.createRandom(['777']);
+            let attacker: any = ethers.Wallet.createRandom(['666']);
+            console.log(victim.address);
+            let [mockApi, criticalEvent] = createBatchContractInfo(
+                '0x0000000000000000000000000000000000000777',
+                'TestNFT',
+                'TST',
+                '100',
+                'ERC721',
+                10,
+                victim.address,
+                attacker.address,
+                "777"
+            )
+            const findings = await handleTransaction(criticalEvent, mockApi);
             console.log(findings);
 
         });

@@ -15,6 +15,8 @@ const parseSeaport = (
     logMarket: Market,
     decodedLogData: SeaportOrder
 ) => {
+
+    console.log("parseSeaport Running...")
     const offer = decodedLogData.offer;
     const consideration = decodedLogData.consideration;
     const nftOnOfferSide = offer.some((item) => checkDuplicatedIdentifier(item, tx));
@@ -23,21 +25,23 @@ const parseSeaport = (
     );
 
     let price;
-    if (!nftOnOfferSide && !nftOnConsiderationSide) return false;
+    if (!nftOnOfferSide && !nftOnConsiderationSide) {
+        return false
+    };
 
-        // if target nft on offer side, then consideration is the total price
-        // else offer is the total price
-        if (nftOnOfferSide) {
-            const totalConsiderationAmount = consideration.reduce(reducer, 0);
-            price = totalConsiderationAmount;
-        } else {
-            const totalOfferAmount = offer.reduce(reducer, 0);
-            price = totalOfferAmount;
-        }
-        tx.totalPrice += price;
-        tx.marketList.push(logMarket);
-        tx.prices.push(formatPrice(price));
-    
+    // if target nft on offer side, then consideration is the total price
+    // else offer is the total price
+    if (nftOnOfferSide) {
+        const totalConsiderationAmount = consideration.reduce(reducer, 0);
+        price = totalConsiderationAmount;
+    } else {
+        const totalOfferAmount = offer.reduce(reducer, 0);
+        price = totalOfferAmount;
+    }
+    tx.totalPrice += price;
+    tx.marketList.push(logMarket);
+    tx.prices.push(formatPrice(price));
+
 
     return true;
 };
