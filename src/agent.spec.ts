@@ -7,7 +7,7 @@ import {
     TransactionEvent
 } from "forta-agent";
 
-import agent from "./agent";
+import agent, { storage } from "./agent";
 import Web3EthAbi from 'web3-eth-abi';
 import { NftTokenType, OpenSeaCollectionMetadata } from 'alchemy-sdk';
 import type { BatchContractInfo } from './types';

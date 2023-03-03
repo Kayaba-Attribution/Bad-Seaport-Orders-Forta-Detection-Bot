@@ -7,20 +7,19 @@ import {
   EntityType
 } from "forta-agent";
 
+import { utils } from 'ethers';
 import type { BatchContractInfo } from './types';
 import { getBatchContractData } from './utils/api.js';
 import { transferIndexer } from './controllers/iso.js';
 
 export const SEAPORT_ADDRESS = '0x00000000006c3852cbef3e08e8df289169ede581';
-import fs from 'fs';
-
 
 // !MINE
 let findingsCount = 0;
 let nftContractsData: BatchContractInfo[] = [];
 
 
-const storage: Finding[] = [];
+export const storage: Finding[] = [];
 
 export const findingSearch = (find: Finding) => {
 
@@ -48,10 +47,12 @@ export const findingSearch = (find: Finding) => {
             storage.splice(storage.indexOf(finding), 1);
           }
 
+          let alertId_ = utils.keccak256(utils.toUtf8Bytes(finding.metadata.hash + finding.metadata.contractAddress))
+
           newFinding = Finding.fromObject({
-            name: "Seaport 1.1 ERC-721 Phishing Transfer",
-            description: `Bad Seaport Orders Forta Detection NFT Sold`,
-            alertId: "FORTA-1",
+            name: "Seaport 1.1 NFT Phishing Attacker Sells",
+            description: `Attacker ${find.labels[0].entity} sold ${find.metadata.contractName} id: ${tokenId} stolen from ${find.labels[1].entity} on ${find.metadata.market} for a aprox profit of ${new_metadata.profit}`,
+            alertId: alertId_,
             severity: FindingSeverity.Critical,
             type: FindingType.Exploit,
             metadata: new_metadata,
@@ -70,7 +71,6 @@ export const findingSearch = (find: Finding) => {
 
         }
       }
-      //break;
     }
 
 
@@ -143,7 +143,8 @@ const handleTransaction: HandleTransaction = async (
 export default {
   // initialize,
   handleTransaction,
-  transferIndexer
+  transferIndexer,
+  storage
   // handleBlock,
   // handleAlert
 };
