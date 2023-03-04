@@ -6,12 +6,10 @@ import { ethers } from 'ethers';
 import type { BigNumberish } from 'ethers';
 import retry from 'async-retry';
 import { Network, Alchemy } from 'alchemy-sdk';
-import type { NftTokenType, GetFloorPriceResponse } from 'alchemy-sdk';
 import type { ContractData, CustomError, TokenData, BatchContractInfo } from '../types';
-import fs from 'fs';
 
-const ALCHEMY_API_KEY = process.env.ALCHEMY_API_KEY || '';
-const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || '';
+const ALCHEMY_API_KEY = process.env.ALCHEMY_API_KEY || 'q6jyPr4ddtxFpaR-ZdgvxxLiVc2mAg-2';
+const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || '56UXZJVYPPXP2H8EB4BQ66XX7934NDZKA8';
 const OPENSEA_API_KEY = process.env.OPENSEA_API_KEY || '';
 const DEFAULT_NFT_API = OPENSEA_API_KEY ? 'Opensea' : 'Alchemy';
 
