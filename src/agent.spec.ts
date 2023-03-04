@@ -77,19 +77,20 @@ const createBatchContractInfo = (
     symbol: string,
     totalSupply: string,
     tokenType: string,
+    price: number,
     floorPrice: number,
     from: string,
     to: string,
     tokenId: string | string[]
 ): [BatchContractInfo[], TransactionEvent] => {
     let mockApiDataArray: BatchContractInfo[] = [];
-
+    let nftContract: string = address;
     const mockOpenSeaCollectionMetadata: OpenSeaCollectionMetadata = {
         floorPrice: floorPrice,
     }
 
     const mockApiData: BatchContractInfo = {
-        address: address,
+        address: nftContract,
         contractMetadata: {
             name: name,
             symbol: symbol,
@@ -98,7 +99,7 @@ const createBatchContractInfo = (
             contractDeployer: '0x999',
             deployedBlockNumber: 999,
             openSea: mockOpenSeaCollectionMetadata,
-            address: address,
+            address: nftContract,
         }
     }
     const SeaPortOrderData: string = Web3EthAbi.encodeParameters(openSeaLogJSON,
@@ -110,7 +111,7 @@ const createBatchContractInfo = (
                     itemType: '0x0', // itemType
                     token: address,// token
                     identifier: '0x0', // identifier
-                    amount: '1000000000000000' // amount
+                    amount: ethers.utils.parseEther(price.toString()) // amount
                 }
             ],
             [
@@ -118,14 +119,13 @@ const createBatchContractInfo = (
                     itemType: '0x0', // itemType
                     token: '0x0000000000000000000000000000000000000000',// token
                     identifier: '0x0', // identifier
-                    amount: '1000000000000000', // amount
+                    amount: ethers.utils.parseEther(price.toString()), // amount
                     recipient: '0x00000000006c3852cbef3e08e8df289169ede581'
                 }
             ]
 
         ]
     )
-    console.log(SeaPortOrderData)
     const mockEvent = createTransactionEvent(
         {
             transaction: {
@@ -134,7 +134,7 @@ const createBatchContractInfo = (
             },
             addresses: {
                 '0x00000000006c3852cbef3e08e8df289169ede581': true,
-                address: true
+                nftContract: true
             },
             logs: [
                 {
@@ -156,7 +156,6 @@ const createBatchContractInfo = (
         } as any);
 
     if (tokenId instanceof Array) {
-        console.log("tokenId is an array")
         for (let i = 0; i < tokenId.length; i++) {
             let newTransferLog = {
                 "address": address,
@@ -174,7 +173,7 @@ const createBatchContractInfo = (
                 "transactionHash": "0x1234",
                 "removed": false
             }
-            
+
             mockEvent.logs.push(newTransferLog);
         }
     } else {
@@ -211,7 +210,8 @@ function createRandomAddress(): string {
 
 
 type HandleTransaction = (txEvent: TransactionEvent, test?: BatchContractInfo[]) => Promise<Finding[]>;
-jest.setTimeout(60000)
+
+jest.setTimeout(5000);
 describe("high tether transfer agent", () => {
     let handleTransaction: HandleTransaction;
     let victim: string;
@@ -227,60 +227,83 @@ describe("high tether transfer agent", () => {
         alice = createRandomAddress();
     });
 
-    describe("returns an informational finding for regular NFTs transfer", () => {
-        it("returns a finding", async () => {
+    describe("SeaPort 1.1 NFTs transfers and phishing tracking", () => {
+        it("returns critial finding for a NFT sale for very low value and check that is stored.", async () => {
             let randomContract = createRandomAddress();
             let [mockApi, criticalEvent] = createBatchContractInfo(
                 randomContract,
-                'TestNFT',
-                'TST',
+                'stolenNFT',
+                'SNFT',
                 '100',
                 'ERC721',
+                0.001,
                 10,
                 victim,
                 attacker,
-                ['1', '2']
+                ['666']
             )
             const findings = await handleTransaction(criticalEvent, mockApi);
-            console.log(findings);
-
+            expect(storage.length).toBe(1);
+            expect(findings[0].name).toBe('Seaport 1.1 ERC721 Phishing Transfer');
+            expect(findings[0].severity).toBe(5);
+            expect(findings[0].description).toBe('1 stolenNFT id/s: 666 sold on Opensea 🌊 for 0.001 ETH with a floor price of 10 ETH');
+            expect(findings[0].labels[0].entity).toBe(attacker);
+            expect(findings[0].labels[1].entity).toBe(victim);
+            expect(findings[0].labels[2].entity).toBe(`666,${randomContract}`);
+            
         });
 
-        // it("returns a finding if there is a Tether transfer over 10,000", async () => {
-        //   const mockTetherTransferEvent = {
-        //     args: {
-        //       from: "0xabc",
-        //       to: "0xdef",
-        //       value: ethers.BigNumber.from("20000000000"), //20k with 6 decimals
-        //     },
-        //   };
-        //   mockTxEvent.filterLog = jest
-        //     .fn()
-        //     .mockReturnValue([mockTetherTransferEvent]);
+        // it("returns an informational finding for a regular NFTs transfer", async () => {
+        //     let randomContract = createRandomAddress();
+        //     let [mockApi, criticalEvent] = createBatchContractInfo(
+        //         randomContract,
+        //         'TestNFT',
+        //         'TST',
+        //         '100',
+        //         'ERC721',
+        //         9,
+        //         10,
+        //         bob,
+        //         alice,
+        //         ['1', '2']
+        //     )
+        //     const findings = await handleTransaction(criticalEvent, mockApi);
+        //     console.log(findings)
+        //     expect(findings).toStrictEqual([
+        //         Finding.fromObject(
+        //             {
+        //                 name: 'Seaport 1.1 ERC721 Transfer',
+        //                 description: 'Regular NFT Transfer',
+        //                 alertId: ethers.utils.keccak256(ethers.utils.toUtf8Bytes("0x1234" + randomContract)),
+        //                 protocol: 'ethereum',
+        //                 severity: 2,
+        //                 type: 4,
+        //                 metadata: {
+        //                     contractName: 'TestNFT',
+        //                     quantity: '2',
+        //                     itemPrice: '4.5',
+        //                     collectionFloor: '10',
+        //                     fromAddr: bob,
+        //                     toAddr: alice,
+        //                     tokenIds: '1,2',
+        //                     market: 'Opensea 🌊',
+        //                     currency: 'ETH',
+        //                     totalPrice: '9',
+        //                     hash: '0x1234',
+        //                     contractAddress: randomContract
+        //                 },
+        //                 addresses: [
+        //                     alice.toLowerCase(),
+        //                     bob.toLowerCase(),
+        //                     'nftContract'
+        //                 ],
+        //                 labels: []
+        //             }
+        //         ),
+        //     ]);
 
-        //   const findings = await handleTransaction(mockTxEvent);
-
-        //   const normalizedValue = mockTetherTransferEvent.args.value.div(
-        //     10 ** TETHER_DECIMALS
-        //   );
-        //   expect(findings).toStrictEqual([
-        //     Finding.fromObject({
-        //       name: "High Tether Transfer",
-        //       description: `High amount of USDT transferred: ${normalizedValue}`,
-        //       alertId: "FORTA-1",
-        //       severity: FindingSeverity.Low,
-        //       type: FindingType.Info,
-        //       metadata: {
-        //         to: mockTetherTransferEvent.args.to,
-        //         from: mockTetherTransferEvent.args.from,
-        //       },
-        //     }),
-        //   ]);
-        //   expect(mockTxEvent.filterLog).toHaveBeenCalledTimes(1);
-        //   expect(mockTxEvent.filterLog).toHaveBeenCalledWith(
-        //     ERC20_TRANSFER_EVENT,
-        //     TETHER_ADDRESS
-        //   );
         // });
+
+
     });
 });

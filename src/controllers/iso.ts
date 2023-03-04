@@ -47,8 +47,7 @@ async function transferIndexer(
     // ! Create a tx obeject with empty fields, which will be filled later on
 
     const tx = initializeTransactionData(transactionHash, contractData.contractMetadata, recipient, contractAddress);
-    //console.log("txEvent.logs:", txEvent.logs)
-    
+
     for (const log of txEvent.logs) {
         const logAddress = log.address.toLowerCase();
         const logMarket = _.get(markets, logAddress);
@@ -67,19 +66,12 @@ async function transferIndexer(
                 ? tx.market.logDecoder
                 : markets[logAddress as keyof typeof markets].logDecoder;
 
-            if (marketLogDecoder === undefined){
+            if (marketLogDecoder === undefined) {
                 console.log("marketLogDecoder is undefined")
                 return null;
-            } 
+            }
 
             const decodedLogData = Web3EthAbi.decodeLog(marketLogDecoder, log.data, []);
-            // if(log.data !== "0x") {
-            //     console.log('\n\n -------------- \n\n')
-            //     console.log("log:", log.data)
-            //     console.log("decoded:", decodedLogData)
-            //     console.log("marketLogDecoder:", marketLogDecoder)
-            //     console.log('\n\n -------------- \n\n')
-            // }
             if (isSeaport(decodedLogData)) {
                 const parseResult = parseSeaport(tx, log, logMarket, decodedLogData);
 
@@ -113,12 +105,12 @@ async function transferIndexer(
         let itemPrice: number = totalPrice / quantity;
         let tokenIds_ = tx.tokenType === 'ERC721' ? tx.tokens!.toString() : tx.tokenId!;
         let alertId_ = utils.keccak256(utils.toUtf8Bytes(transactionHash + contractAddress))
-        
+
         if (itemPrice < tx.floor! * 0.01) {
             // Item price is under 1% of floor price
-            return Finding.fromObject({
+            let critFind: Finding = Finding.fromObject({
                 name: `Seaport 1.1 ${tx.tokenType} Phishing Transfer`,
-                description: `${quantity} ${contractName || tokenName} ids: ${tokenIds_} sold on ${market.displayName} for ${totalPrice} ${currency.name} with a floor price of ${tx.floor} ${currency.name}`,
+                description: `${quantity} ${contractName || tokenName} id/s: ${tokenIds_} sold on ${market.displayName} for ${totalPrice} ${currency.name} with a floor price of ${tx.floor} ${currency.name}`,
                 alertId: alertId_,
                 severity: FindingSeverity.Critical,
                 type: FindingType.Exploit,
@@ -127,8 +119,8 @@ async function transferIndexer(
                     'quantity': quantity.toString(),
                     'itemPrice': itemPrice.toString(),
                     'collectionFloor': tx.floor!.toString(),
-                    'fromAddr': fromAddr!,
-                    'toAddr': toAddr!,
+                    'fromAddr': fromAddr!.toLowerCase(),
+                    'toAddr': toAddr!.toLowerCase(),
                     'tokenIds': tokenIds_,
                     'market': market.displayName,
                     'currency': currency?.name,
@@ -139,27 +131,31 @@ async function transferIndexer(
                 labels: [
                     {
                         entityType: EntityType.Address,
-                        entity: toAddr!,
+                        entity: toAddr!.toLowerCase(),
                         label: "attacker",
                         confidence: 0.9,
                         remove: false
                     },
                     {
                         entityType: EntityType.Address,
-                        entity: fromAddr!,
+                        entity: fromAddr!.toLowerCase(),
                         label: "victim",
-                        confidence: 0.9,
-                        remove: false
-                    },
-                    {
-                        entityType: EntityType.Unknown,
-                        entity: tokenIds_,
-                        label: "Stolen NFTs Ids",
                         confidence: 0.9,
                         remove: false
                     }
                 ]
             })
+            let tokenIdsArr = tokenIds_.split(',');
+            for (const id of tokenIdsArr) {
+                critFind.labels.push({
+                    entityType: EntityType.Address,
+                    entity: `${id},${contractAddress}`,
+                    label: "stolen",
+                    confidence: 0.9,
+                    remove: false,
+                })
+            }
+            return critFind;
         } else {
             // Regular Transfer
             return Finding.fromObject({
@@ -174,8 +170,8 @@ async function transferIndexer(
                     'quantity': quantity.toString(),
                     'itemPrice': itemPrice.toString(),
                     'collectionFloor': tx.floor!.toString(),
-                    'fromAddr': fromAddr!,
-                    'toAddr': toAddr!,
+                    'fromAddr': fromAddr!.toLowerCase(),
+                    'toAddr': toAddr!.toLowerCase(),
                     'tokenIds': tokenIds_,
                     'market': market.displayName,
                     'currency': currency?.name || "ETH",

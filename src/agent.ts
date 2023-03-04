@@ -93,7 +93,6 @@ const handleTransaction: HandleTransaction = async (
 
   // Only intersted on Seaport if not present return 0 findings.
   // Do not run Alchemy API calls on OpenSea Contract.
-  console.log("Seaport Transfer", txEvent.addresses)
   if (!txEvent.addresses.hasOwnProperty(SEAPORT_ADDRESS)) { return findings } else { delete txEvent.addresses[SEAPORT_ADDRESS] }
   // limiting this agent to emit only 5 findings so that the alert feed is not spammed
   //if (findingsCount >= 5) return findings;
