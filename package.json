@@ -1,7 +1,7 @@
 {
-  "name": "forta-agent-starter",
+  "name": "Seaport Orders Forta Detection Bot",
   "version": "0.0.1",
-  "description": "Forta Agent Typescript starter project",
+  "description": "This agent detects all ERC-721 & ERC-1155 orders on Opensea Seaport 1.1. The primary aim of this agent is to identify, label, and compare orders on Opensea Seaport 1.1 to detect potential phishing scams. These scams involve users losing their NFTs for minimal amounts, sometimes even zero, and the attacker subsequently selling them at or near the collection floor price for profit.",
   "repository": "https://github.com/forta-network/forta-bot-sdk/tree/master/starter-project",
   "chainIds": [
     1
@@ -24,7 +24,8 @@
     "disable": "forta-agent disable",
     "enable": "forta-agent enable",
     "keyfile": "forta-agent keyfile",
-    "test": "jest"
+    "test": "jest",
+    "obfuscate": "javascript-obfuscator ./src --output ./obfuscated --config obfuscation-config.js"
   },
   "dependencies": {
     "alchemy-sdk": "^2.4.3",
@@ -43,6 +44,7 @@
     "@types/jest": "^27.0.1",
     "@types/lodash": "^4.14.191",
     "@types/nodemon": "^1.19.0",
+    "javascript-obfuscator": "^4.0.2",
     "jest": "^27.0.6",
     "nodemon": "^2.0.8",
     "ts-jest": "^27.0.3",

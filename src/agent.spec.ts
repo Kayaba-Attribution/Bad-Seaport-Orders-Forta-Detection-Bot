@@ -241,7 +241,7 @@ describe("high tether transfer agent", () => {
                 0.58,
                 victim,
                 attacker,
-                ['6262' ,'6696','8273','9791','9911'],
+                ['6262', '6696', '8273', '9791', '9911'],
                 "0x001"
             )
             const findings = await handleTransaction(criticalEvent, mockApi);
@@ -267,81 +267,83 @@ describe("high tether transfer agent", () => {
             console.log(extraFinding);
 
         });
-        // it("returns critial finding for a NFT sale for very low value and check that is stored.", async () => {
-        //     let randomContract = createRandomAddress();
-        //     let [mockApi, criticalEvent] = createBatchContractInfo(
-        //         randomContract,
-        //         'stolenNFT',
-        //         'SNFT',
-        //         '100',
-        //         'ERC721',
-        //         0.001,
-        //         10,
-        //         victim,
-        //         attacker,
-        //         ['666']
-        //     )
-        //     const findings = await handleTransaction(criticalEvent, mockApi);
-        //     expect(storage.length).toBe(1);
-        //     expect(findings[0].name).toBe('Seaport 1.1 ERC721 Phishing Transfer');
-        //     expect(findings[0].severity).toBe(5);
-        //     expect(findings[0].description).toBe('1 stolenNFT id/s: 666 sold on Opensea 🌊 for 0.001 ETH with a floor price of 10 ETH');
-        //     expect(findings[0].labels[0].entity).toBe(attacker);
-        //     expect(findings[0].labels[1].entity).toBe(victim);
-        //     expect(findings[0].labels[2].entity).toBe(`666,${randomContract}`);
+        it("returns critial finding for a NFT sale for very low value and check that is stored.", async () => {
+            let randomContract = createRandomAddress();
+            let [mockApi, criticalEvent] = createBatchContractInfo(
+                randomContract,
+                'stolenNFT',
+                'SNFT',
+                '100',
+                'ERC721',
+                0.001,
+                10,
+                victim,
+                attacker,
+                ['666'],
+                "0x002"
+            )
+            const findings = await handleTransaction(criticalEvent, mockApi);
+            expect(storage.length).toBe(2);
+            expect(findings[0].name).toBe('Seaport 1.1 ERC721 Phishing Transfer');
+            expect(findings[0].severity).toBe(5);
+            expect(findings[0].description).toBe('1 stolenNFT id/s: 666 sold on Opensea 🌊 for 0.001 ETH with a floor price of 10 ETH');
+            expect(findings[0].labels[0].entity).toBe(attacker);
+            expect(findings[0].labels[1].entity).toBe(victim);
+            expect(findings[0].labels[2].entity).toBe(`666,${randomContract}`);
 
-        // });
+        });
 
-        // it("returns an informational finding for a regular NFTs transfer", async () => {
-        //     let randomContract = createRandomAddress();
-        //     let [mockApi, criticalEvent] = createBatchContractInfo(
-        //         randomContract,
-        //         'TestNFT',
-        //         'TST',
-        //         '100',
-        //         'ERC721',
-        //         9,
-        //         10,
-        //         bob,
-        //         alice,
-        //         ['1', '2']
-        //     )
-        //     const findings = await handleTransaction(criticalEvent, mockApi);
-        //     console.log(findings)
-        //     expect(findings).toStrictEqual([
-        //         Finding.fromObject(
-        //             {
-        //                 name: 'Seaport 1.1 ERC721 Transfer',
-        //                 description: 'Regular NFT Transfer',
-        //                 alertId: ethers.utils.keccak256(ethers.utils.toUtf8Bytes("0x1234" + randomContract)),
-        //                 protocol: 'ethereum',
-        //                 severity: 2,
-        //                 type: 4,
-        //                 metadata: {
-        //                     contractName: 'TestNFT',
-        //                     quantity: '2',
-        //                     itemPrice: '4.5',
-        //                     collectionFloor: '10',
-        //                     fromAddr: bob,
-        //                     toAddr: alice,
-        //                     tokenIds: '1,2',
-        //                     market: 'Opensea 🌊',
-        //                     currency: 'ETH',
-        //                     totalPrice: '9',
-        //                     hash: hash,
-        //                     contractAddress: randomContract
-        //                 },
-        //                 addresses: [
-        //                     alice.toLowerCase(),
-        //                     bob.toLowerCase(),
-        //                     'nftContract'
-        //                 ],
-        //                 labels: []
-        //             }
-        //         ),
-        //     ]);
+        it("returns an informational finding for a regular NFTs transfer", async () => {
+            let randomContract = createRandomAddress();
+            let [mockApi, criticalEvent] = createBatchContractInfo(
+                randomContract,
+                'TestNFT',
+                'TST',
+                '100',
+                'ERC721',
+                9,
+                10,
+                bob,
+                alice,
+                ['1', '2'],
+                "0x001"
+            )
+            const findings = await handleTransaction(criticalEvent, mockApi);
+            console.log(findings)
+            expect(findings).toStrictEqual([
+                Finding.fromObject(
+                    {
+                        name: 'Seaport 1.1 ERC721 Transfer',
+                        description: 'Regular NFT Transfer',
+                        alertId: ethers.utils.keccak256(ethers.utils.toUtf8Bytes("0x001" + randomContract)),
+                        protocol: 'ethereum',
+                        severity: 2,
+                        type: 4,
+                        metadata: {
+                            contractName: 'TestNFT',
+                            quantity: '2',
+                            itemPrice: '4.5',
+                            collectionFloor: '10',
+                            fromAddr: bob,
+                            toAddr: alice,
+                            tokenIds: '1,2',
+                            market: 'Opensea 🌊',
+                            currency: 'ETH',
+                            totalPrice: '9',
+                            hash: "0x001",
+                            contractAddress: randomContract
+                        },
+                        addresses: [
+                            alice.toLowerCase(),
+                            bob.toLowerCase(),
+                            'nftContract'
+                        ],
+                        labels: []
+                    }
+                ),
+            ]);
 
-        // });
+        });
 
 
     });

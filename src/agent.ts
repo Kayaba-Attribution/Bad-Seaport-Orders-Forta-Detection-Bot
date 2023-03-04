@@ -68,7 +68,7 @@ export const findingSearch = (find: Finding) => {
                 label: "stolen",
                 confidence: 0.9,
                 remove: false,
-            }
+              }
             ]
           })
 
@@ -92,59 +92,61 @@ const handleTransaction: HandleTransaction = async (
 ) => {
   const findings: Finding[] = [];
 
-  //fs.writeFileSync('test.json', JSON.stringify(txEvent, null, 2));
+  try {
+    // Only intersted on Seaport if not present return 0 findings.
+    // Do not run Alchemy API calls on OpenSea Contract.
+    if (!txEvent.addresses.hasOwnProperty(SEAPORT_ADDRESS)) { return findings } else { delete txEvent.addresses[SEAPORT_ADDRESS] }
 
-  // Only intersted on Seaport if not present return 0 findings.
-  // Do not run Alchemy API calls on OpenSea Contract.
-  if (!txEvent.addresses.hasOwnProperty(SEAPORT_ADDRESS)) { return findings } else { delete txEvent.addresses[SEAPORT_ADDRESS] }
-  // limiting this agent to emit only 5 findings so that the alert feed is not spammed
-  //if (findingsCount >= 5) return findings;
+    // Retrieve metadata from other addresses included, goal is get the info of the NFTs
+    // API returns {} for EOA or UNKNOWN for contracts that are not ERC721 or ERC1155 standards.
+    if (!testData) {
+      nftContractsData = await getBatchContractData(Object.keys(txEvent.addresses));
+    } else {
+      console.log("Test Data Loaded")
+      nftContractsData = testData;
+    }
 
-  // Retrieve metadata from other addresses included, goal is get the info of the NFTs
-  // API returns {} for EOA or UNKNOWN for contracts that are not ERC721 or ERC1155 standards.
-  if (!testData){
-    nftContractsData = await getBatchContractData(Object.keys(txEvent.addresses));
-  } else {
-    console.log("Test Data Loaded")
-    nftContractsData = testData;
-  }
+    for (const info of nftContractsData) {
 
-  for (const info of nftContractsData) {
+      if (Object.keys(info).length !== 0) {
+        if (info.contractMetadata.tokenType === 'ERC721' || info.contractMetadata.tokenType === 'ERC1155') {
+          console.log(`run indexer for ${info.contractMetadata.name} ${info.address}`)
+          let find: any = await transferIndexer(txEvent, info);
+          if (!find) return [];
+          if (!Object.prototype.hasOwnProperty.call(find, 'name')) return [];
 
-    if (Object.keys(info).length !== 0) {
-      if (info.contractMetadata.tokenType === 'ERC721' || info.contractMetadata.tokenType === 'ERC1155') {
-        console.log(`run indexer for ${info.contractMetadata.name} ${info.address}`)
-        let find: any = await transferIndexer(txEvent, info);
-        if (!find) return [];
-        if (!Object.prototype.hasOwnProperty.call(find, 'name')) return [];
+          // Add addresses to finding
+          if (find.metadata.toAddr) find.addresses.push((find.metadata.toAddr).toLowerCase());
+          if (find.metadata.fromAddr) find.addresses.push((find.metadata.fromAddr).toLowerCase());
 
-        // Add addresses to finding
-        if (find.metadata.toAddr) find.addresses.push((find.metadata.toAddr).toLowerCase());
-        if (find.metadata.fromAddr) find.addresses.push((find.metadata.fromAddr).toLowerCase());
+          for (const [key, value] of Object.entries(txEvent.addresses)) {
+            if (!find.addresses.includes(key)) find.addresses.push(key);
+          }
 
-        for (const [key, value] of Object.entries(txEvent.addresses)) {
-          if (!find.addresses.includes(key)) find.addresses.push(key);
+          if (find.severity === FindingSeverity.Critical) {
+            // add to storage only if not already present
+            console.log("CRITICAL ALERT ADDED TO STORAGE", find.metadata.hash)
+            storage.push(find);
+          }
+
+          findings.push(findingSearch(find))
         }
-
-        if (find.severity === FindingSeverity.Critical) {
-          // add to storage only if not already present
-          console.log("CRITICAL ALERT ADDED TO STORAGE", find.metadata.hash)
-          storage.push(find);
-        }
-
-        findings.push(findingSearch(find))
       }
     }
+    return findings;
+  } catch (e) {
+    console.log({
+      message: "Error in agent",
+      error: e,
+      hash: txEvent.transaction.hash,
+      storage: storage
+    })
+    return findings;
   }
-  //console.log('storage: ', storage)
-  return findings;
 };
 
 export default {
-  // initialize,
   handleTransaction,
   transferIndexer,
   storage
-  // handleBlock,
-  // handleAlert
 };

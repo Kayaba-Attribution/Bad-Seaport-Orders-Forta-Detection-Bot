@@ -4,6 +4,10 @@
 
 This agent detects all ERC-721 & ERC-1155 orders on Opensea Seaport 1.1. The primary aim of this agent is to identify, label, and compare orders on Opensea Seaport 1.1 to detect potential phishing scams. These scams involve users losing their NFTs for minimal amounts, sometimes even zero, and the attacker subsequently selling them at or near the collection floor price for profit.
 
+#### Supported Chains
+
+- Ethereum
+
 ### Details
 
 - Utilizes the Alchemy API to fetch the NFT's floor price. If a sale occurs where the item price is less than 1% of the collection floor price, a critical alert is triggered.
@@ -35,12 +39,9 @@ This agent detects all ERC-721 & ERC-1155 orders on Opensea Seaport 1.1. The pri
 + hash
 
 
-## Supported Chains
 
-- Ethereum
 
 ## Alerts
-
 
 - Seaport 1.1 (ERC711 OR ERC1155) Phishing Transfer
   - Fired when the itemPrice for the tokens is lower than 1% of the collection floor price
