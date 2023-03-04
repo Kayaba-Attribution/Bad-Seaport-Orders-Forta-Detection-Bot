@@ -46,9 +46,7 @@ async function transferIndexer(
     if (!(recipient.toLowerCase() in markets)) {
         return [];
     }
-
     const tx = initializeTransactionData(transactionHash, contractData.contractMetadata, recipient, contractAddress);
-
     for (const log of txEvent.logs) {
         const logAddress = log.address.toLowerCase();
         const logMarket = _.get(markets, logAddress);
@@ -79,6 +77,7 @@ async function transferIndexer(
         }
     }
 
+
     tx.quantity = tx.tokenType === 'ERC721' ? tx.tokens.length : _.sum(tx.tokens);
 
     if ((tx.quantity === 0)) {
@@ -102,10 +101,26 @@ async function transferIndexer(
         console.log(`${quantity} ${contractName || tokenName} sold on ${market.displayName} for ${totalPrice} ${currency.name}`);
 
         let itemPrice: number = totalPrice / quantity;
+        
         let tokenIds_ = tx.tokenType === 'ERC721' ? tx.tokens!.toString() : tx.tokenId!;
         let alertId_ = utils.keccak256(utils.toUtf8Bytes(transactionHash + contractAddress))
+        
+        let metadata_ = {
+            'contractName': contractName!,
+            'quantity': quantity.toString(),
+            'itemPrice': itemPrice.toString(),
+            'collectionFloor': tx.floor?.toString() || "UNKWN",
+            'fromAddr': fromAddr!.toLowerCase(),
+            'toAddr': toAddr!.toLowerCase(),
+            'tokenIds': tokenIds_,
+            'market': market.displayName,
+            'currency': currency?.name || "ETH",
+            'totalPrice': totalPrice.toString(),
+            'hash': transactionHash,
+            'contractAddress': contractAddress
+        }
 
-        if (itemPrice < tx.floor! * 0.01) {
+        if (itemPrice < tx.floor! * 0.01 && tx.floor!.toString() !== 'UNKWN' && tx.tokenType !== 'ERC1155' ) {
             // Item price is under 1% of floor price
             let critFind: Finding = Finding.fromObject({
                 name: `Seaport 1.1 ${tx.tokenType} Phishing Transfer`,
@@ -113,20 +128,7 @@ async function transferIndexer(
                 alertId: alertId_,
                 severity: FindingSeverity.Critical,
                 type: FindingType.Exploit,
-                metadata: {
-                    'contractName': contractName!,
-                    'quantity': quantity.toString(),
-                    'itemPrice': itemPrice.toString(),
-                    'collectionFloor': tx.floor!.toString(),
-                    'fromAddr': fromAddr!.toLowerCase(),
-                    'toAddr': toAddr!.toLowerCase(),
-                    'tokenIds': tokenIds_,
-                    'market': market.displayName,
-                    'currency': currency?.name,
-                    'totalPrice': totalPrice.toString(),
-                    'hash': transactionHash,
-                    'contractAddress': contractAddress
-                },
+                metadata: metadata_,
                 labels: [
                     {
                         entityType: EntityType.Address,
@@ -161,23 +163,9 @@ async function transferIndexer(
                 name: `Seaport 1.1 ${tx.tokenType} Transfer`,
                 description: `Regular NFT Transfer`,
                 alertId: alertId_,
-                severity: FindingSeverity.Low,
+                severity: FindingSeverity.Info,
                 type: FindingType.Info,
-                metadata: {
-
-                    'contractName': contractName!,
-                    'quantity': quantity.toString(),
-                    'itemPrice': itemPrice.toString(),
-                    'collectionFloor': tx.floor!.toString(),
-                    'fromAddr': fromAddr!.toLowerCase(),
-                    'toAddr': toAddr!.toLowerCase(),
-                    'tokenIds': tokenIds_,
-                    'market': market.displayName,
-                    'currency': currency?.name || "ETH",
-                    'totalPrice': totalPrice.toString(),
-                    'hash': transactionHash,
-                    'contractAddress': contractAddress
-                },
+                metadata: metadata_,
             })
         }
     }

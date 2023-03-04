@@ -110,7 +110,7 @@ const handleTransaction: HandleTransaction = async (
 
       if (Object.keys(info).length !== 0) {
         if (info.contractMetadata.tokenType === 'ERC721' || info.contractMetadata.tokenType === 'ERC1155') {
-          console.log(`run indexer for ${info.contractMetadata.name} ${info.address}`)
+          //console.log(`run indexer for ${info.contractMetadata.name} ${info.address}`)
           let find: any = await transferIndexer(txEvent, info);
           if (!find) return [];
           if (!Object.prototype.hasOwnProperty.call(find, 'name')) return [];
@@ -137,8 +137,8 @@ const handleTransaction: HandleTransaction = async (
   } catch (e) {
     console.log({
       message: "Error in agent",
-      error: e,
       hash: txEvent.transaction.hash,
+      error: e,
       storage: storage
     })
     return findings;

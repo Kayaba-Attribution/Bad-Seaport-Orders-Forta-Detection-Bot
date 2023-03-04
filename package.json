@@ -1,6 +1,6 @@
 {
   "name": "seaport-orders-forta-detection-bot",
-  "version": "0.0.1",
+  "version": "1.0.1",
   "description": "This agent detects all ERC-721 & ERC-1155 orders on Opensea Seaport 1.1. The primary aim of this agent is to identify, label, and compare orders on Opensea Seaport 1.1 to detect potential phishing scams. These scams involve users losing their NFTs for minimal amounts, sometimes even zero, and the attacker subsequently selling them at or near the collection floor price for profit.",
   "repository": "https://github.com/forta-network/forta-bot-sdk/tree/master/starter-project",
   "chainIds": [
