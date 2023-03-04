@@ -43,12 +43,9 @@ async function transferIndexer(
 
     let recipient: string = txEvent.to ? txEvent.to : '';
 
-    // if recipient not in markets return []
     if (!(recipient.toLowerCase() in markets)) {
         return [];
     }
-
-    // ! Create a tx obeject with empty fields, which will be filled later on
 
     const tx = initializeTransactionData(transactionHash, contractData.contractMetadata, recipient, contractAddress);
 

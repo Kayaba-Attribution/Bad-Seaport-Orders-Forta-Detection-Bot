@@ -233,34 +233,34 @@ describe("high tether transfer agent", () => {
             let randomContract = createRandomAddress();
             let [mockApi, criticalEvent] = createBatchContractInfo(
                 randomContract,
-                'stolenNFT',
-                'SNFT',
+                'Mutant Hound Collars',
+                'MHC',
                 '100',
                 'ERC721',
                 0.001,
-                10,
+                0.58,
                 victim,
                 attacker,
-                ['666'],
+                ['6262' ,'6696','8273','9791','9911'],
                 "0x001"
             )
             const findings = await handleTransaction(criticalEvent, mockApi);
             expect(storage.length).toBe(1);
             expect(findings[0].labels[0].entity).toBe(attacker);
             expect(findings[0].labels[1].entity).toBe(victim);
-            expect(findings[0].labels[2].entity).toBe(`666,${randomContract}`);
+            expect(findings[0].labels[2].entity).toBe(`6262,${randomContract}`);
 
             [mockApi, criticalEvent] = createBatchContractInfo(
                 randomContract,
-                'stolenNFT',
-                'SNFT',
+                'Mutant Hound Collars',
+                'MHC',
                 '100',
                 'ERC721',
-                9,
-                10,
+                0.56,
+                0.58,
                 attacker,
                 bob,
-                ['666'],
+                ['6262'],
                 "0x002"
             )
             const extraFinding = await handleTransaction(criticalEvent, mockApi);

@@ -8,19 +8,15 @@ import {
 } from "forta-agent";
 
 import { utils } from 'ethers';
-import type { BatchContractInfo } from './types';
 import { getBatchContractData } from './utils/api.js';
 import { transferIndexer } from './controllers/iso.js';
+import type { BatchContractInfo } from './types';
 
 export const SEAPORT_ADDRESS = '0x00000000006c3852cbef3e08e8df289169ede581';
 
-// !MINE
-let findingsCount = 0;
 let nftContractsData: BatchContractInfo[] = [];
 
-
 export const storage: Finding[] = [];
-
 
 export const findingSearch = (find: Finding) => {
   let newFinding: Finding;
@@ -65,7 +61,14 @@ export const findingSearch = (find: Finding) => {
                 label: "buyer",
                 confidence: 0.9,
                 remove: false
-              }
+              },
+              {
+                entityType: EntityType.Address,
+                entity: `${tokenId},${finding.metadata.contractAddress}`,
+                label: "stolen",
+                confidence: 0.9,
+                remove: false,
+            }
             ]
           })
 
