@@ -8,7 +8,7 @@ export const initializeTransactionData = (
     contractAddress: string
 ) => {
     let tx: TransactionData;
-    console.log("initializeTransactionData running...")
+    //console.log("initializeTransactionData running...")
     try {
         tx = {
             recipient: markets[recipient].name,
@@ -27,7 +27,7 @@ export const initializeTransactionData = (
             seaportIdentifiers: []
         };
     } catch (error) {
-        console.log("initializeTransactionData error", error)
+        console.log("initializeTransactionData", error, transactionHash)
     }
 
 

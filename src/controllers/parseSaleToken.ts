@@ -1,11 +1,13 @@
-import Web3EthAbi from 'web3-eth-abi';
-import { transferEventTypes } from '../config/logEventTypes.js';
 import _ from 'lodash';
+import Web3EthAbi from 'web3-eth-abi';
+
+import { transferEventTypes } from '../config/logEventTypes.js';
+
 import type { TransactionData } from '../types';
 import type { Log } from '@ethersproject/abstract-provider';
 
 const parseSaleToken = (tx: TransactionData, log: Log, logAddress: string) => {
-    console.log("parseSaleToken Running...")
+    //console.log("parseSaleToken Running...")
     if (
         log.data === '0x' &&
         log.topics[0] === transferEventTypes.ERC721 &&

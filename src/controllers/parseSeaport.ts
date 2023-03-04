@@ -16,7 +16,7 @@ const parseSeaport = (
     decodedLogData: SeaportOrder
 ) => {
 
-    console.log("parseSeaport Running...")
+    //console.log("parseSeaport Running...")
     const offer = decodedLogData.offer;
     const consideration = decodedLogData.consideration;
     const nftOnOfferSide = offer.some((item) => checkDuplicatedIdentifier(item, tx));

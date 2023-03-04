@@ -21,8 +21,8 @@ let nftContractsData: BatchContractInfo[] = [];
 
 export const storage: Finding[] = [];
 
-export const findingSearch = (find: Finding) => {
 
+export const findingSearch = (find: Finding) => {
   let newFinding: Finding;
 
   for (const finding of storage) {
@@ -50,8 +50,8 @@ export const findingSearch = (find: Finding) => {
           let alertId_ = utils.keccak256(utils.toUtf8Bytes(finding.metadata.hash + finding.metadata.contractAddress))
 
           newFinding = Finding.fromObject({
-            name: "Seaport 1.1 NFT Phishing Attacker Sells",
-            description: `Attacker ${find.labels[0].entity} sold ${find.metadata.contractName} id: ${tokenId} stolen from ${find.labels[1].entity} on ${find.metadata.market} for a aprox profit of ${new_metadata.profit}`,
+            name: "Seaport 1.1 NFT Phishing Attacker Sold NFT",
+            description: `Attacker ${finding.labels[0].entity} sold ${finding.metadata.contractName} id: ${tokenId} stolen from ${finding.labels[1].entity} on ${finding.metadata.market} for a aprox profit of ${new_metadata.profit}`,
             alertId: alertId_,
             severity: FindingSeverity.Critical,
             type: FindingType.Exploit,
@@ -125,17 +125,15 @@ const handleTransaction: HandleTransaction = async (
 
         if (find.severity === FindingSeverity.Critical) {
           // add to storage only if not already present
-          console.log("critical")
+          console.log("CRITICAL ALERT ADDED TO STORAGE", find.metadata.hash)
           storage.push(find);
         }
-        console.log(typeof find)
 
         findings.push(findingSearch(find))
-        console.log('storage length: ', storage.length)
       }
     }
   }
-  console.log('storage: ', storage)
+  //console.log('storage: ', storage)
   return findings;
 };
 

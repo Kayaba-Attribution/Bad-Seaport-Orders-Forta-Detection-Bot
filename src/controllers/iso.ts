@@ -1,19 +1,6 @@
-import { formatPrice, getReadableName, getEthUsdPrice } from '../utils/api.js';
 import _ from 'lodash';
-import { ethers, utils } from 'ethers';
-import { markets } from '../config/markets.js';
-import { currencies } from '../config/currencies.js';
-import { saleEventTypes, cancelEventTypes } from '../config/logEventTypes.js';
-import { initializeTransactionData } from '../config/initialize.js';
 
-import { parseSeaport } from './parseSeaport.js';
-import { parseSaleToken } from './parseSaleToken.js';
-
-import type { DecodedLogData, SeaportOrder, BatchContractInfo } from '../types/index.js';
-import { NftTokenType } from 'alchemy-sdk';
-import Web3EthAbi from 'web3-eth-abi';
-import { alchemy } from '../config/setup.js';
-
+// modules
 import {
     Finding,
     FindingSeverity,
@@ -21,6 +8,23 @@ import {
     TransactionEvent,
     EntityType,
 } from "forta-agent";
+import { utils } from 'ethers';
+import Web3EthAbi from 'web3-eth-abi';
+
+// config
+import { markets } from '../config/markets.js';
+import { currencies } from '../config/currencies.js';
+import { saleEventTypes, cancelEventTypes } from '../config/logEventTypes.js';
+import { initializeTransactionData } from '../config/initialize.js';
+
+// parsers
+import { parseSeaport } from './parseSeaport.js';
+import { parseSaleToken } from './parseSaleToken.js';
+
+// api
+import { getReadableName, getEthUsdPrice } from '../utils/api.js';
+
+import type { DecodedLogData, SeaportOrder, BatchContractInfo } from '../types/index.js';
 
 const isSeaport = (
     decodedLogData: DecodedLogData | SeaportOrder
@@ -33,7 +37,7 @@ async function transferIndexer(
     contractData: BatchContractInfo
 ) {
 
-    console.log("transferIndexer Running...")
+    //console.log("transferIndexer Running...")
     const contractAddress: string = contractData.address!;
     const transactionHash: string = txEvent.transaction.hash;
 
@@ -59,15 +63,13 @@ async function transferIndexer(
 
         const isSale = logAddress === recipient && saleEventTypes.includes(log.topics[0]);
         const isCancel = cancelEventTypes.includes(log.topics[0])
-        //console.log("isSale:", isSale)
-        //console.log(logAddress, recipient, saleEventTypes.includes(log.topics[0]))
+
         if (isSale) {
             const marketLogDecoder = isSale
                 ? tx.market.logDecoder
                 : markets[logAddress as keyof typeof markets].logDecoder;
 
             if (marketLogDecoder === undefined) {
-                console.log("marketLogDecoder is undefined")
                 return null;
             }
 
@@ -185,8 +187,3 @@ async function transferIndexer(
 };
 
 export { transferIndexer };
-//const transactionHash = '0x4fff109d9a6c030fce4de9426229a113524903f0babd6de11ee6c046d07226ff';
-//const recipient = '0x00000000006c3852cbef3e08e8df289169ede581';
-//const contractAddress = '0xae99a698156ee8f8d07cbe7f271c31eeaac07087';
-//const contractData: ContractData = { name: 'Mutant Hound Collars', symbol: 'MHC', tokenType: NftTokenType.ERC721 };
-//await transferIndexer(transactionHash, contractAddress, contractData);

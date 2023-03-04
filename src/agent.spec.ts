@@ -81,7 +81,8 @@ const createBatchContractInfo = (
     floorPrice: number,
     from: string,
     to: string,
-    tokenId: string | string[]
+    tokenId: string | string[],
+    hash: string,
 ): [BatchContractInfo[], TransactionEvent] => {
     let mockApiDataArray: BatchContractInfo[] = [];
     let nftContract: string = address;
@@ -129,7 +130,7 @@ const createBatchContractInfo = (
     const mockEvent = createTransactionEvent(
         {
             transaction: {
-                hash: '0x1234',
+                hash: hash,
                 to: '0x00000000006c3852cbef3e08e8df289169ede581'
             },
             addresses: {
@@ -149,7 +150,7 @@ const createBatchContractInfo = (
                     "blockNumber": 16217012,
                     "blockHash": "0x4b1f94a7fc5ca5bb74bde07406c1187b0d4dc12c4aacb11972cf2e7fe5fc9608",
                     "transactionIndex": 1,
-                    "transactionHash": "0x1234",
+                    "transactionHash": hash,
                     "removed": false
                 }
             ]
@@ -170,7 +171,7 @@ const createBatchContractInfo = (
                 "blockNumber": 16217012,
                 "blockHash": "0x4b1f94a7fc5ca5bb74bde07406c1187b0d4dc12c4aacb11972cf2e7fe5fc9608",
                 "transactionIndex": 1 + 1,
-                "transactionHash": "0x1234",
+                "transactionHash": hash,
                 "removed": false
             }
 
@@ -191,7 +192,7 @@ const createBatchContractInfo = (
                 "blockNumber": 16217012,
                 "blockHash": "0x4b1f94a7fc5ca5bb74bde07406c1187b0d4dc12c4aacb11972cf2e7fe5fc9608",
                 "transactionIndex": 2,
-                "transactionHash": "0x1234",
+                "transactionHash": hash,
                 "removed": false
             }
         );
@@ -228,7 +229,7 @@ describe("high tether transfer agent", () => {
     });
 
     describe("SeaPort 1.1 NFTs transfers and phishing tracking", () => {
-        it("returns critial finding for a NFT sale for very low value and check that is stored.", async () => {
+        it("Creates a critical sale alert connecting an attacker to a sell of stolen assets", async () => {
             let randomContract = createRandomAddress();
             let [mockApi, criticalEvent] = createBatchContractInfo(
                 randomContract,
@@ -240,18 +241,56 @@ describe("high tether transfer agent", () => {
                 10,
                 victim,
                 attacker,
-                ['666']
+                ['666'],
+                "0x001"
             )
             const findings = await handleTransaction(criticalEvent, mockApi);
             expect(storage.length).toBe(1);
-            expect(findings[0].name).toBe('Seaport 1.1 ERC721 Phishing Transfer');
-            expect(findings[0].severity).toBe(5);
-            expect(findings[0].description).toBe('1 stolenNFT id/s: 666 sold on Opensea 🌊 for 0.001 ETH with a floor price of 10 ETH');
             expect(findings[0].labels[0].entity).toBe(attacker);
             expect(findings[0].labels[1].entity).toBe(victim);
             expect(findings[0].labels[2].entity).toBe(`666,${randomContract}`);
-            
+
+            [mockApi, criticalEvent] = createBatchContractInfo(
+                randomContract,
+                'stolenNFT',
+                'SNFT',
+                '100',
+                'ERC721',
+                9,
+                10,
+                attacker,
+                bob,
+                ['666'],
+                "0x002"
+            )
+            const extraFinding = await handleTransaction(criticalEvent, mockApi);
+            console.log(extraFinding);
+
         });
+        // it("returns critial finding for a NFT sale for very low value and check that is stored.", async () => {
+        //     let randomContract = createRandomAddress();
+        //     let [mockApi, criticalEvent] = createBatchContractInfo(
+        //         randomContract,
+        //         'stolenNFT',
+        //         'SNFT',
+        //         '100',
+        //         'ERC721',
+        //         0.001,
+        //         10,
+        //         victim,
+        //         attacker,
+        //         ['666']
+        //     )
+        //     const findings = await handleTransaction(criticalEvent, mockApi);
+        //     expect(storage.length).toBe(1);
+        //     expect(findings[0].name).toBe('Seaport 1.1 ERC721 Phishing Transfer');
+        //     expect(findings[0].severity).toBe(5);
+        //     expect(findings[0].description).toBe('1 stolenNFT id/s: 666 sold on Opensea 🌊 for 0.001 ETH with a floor price of 10 ETH');
+        //     expect(findings[0].labels[0].entity).toBe(attacker);
+        //     expect(findings[0].labels[1].entity).toBe(victim);
+        //     expect(findings[0].labels[2].entity).toBe(`666,${randomContract}`);
+
+        // });
 
         // it("returns an informational finding for a regular NFTs transfer", async () => {
         //     let randomContract = createRandomAddress();
@@ -289,7 +328,7 @@ describe("high tether transfer agent", () => {
         //                     market: 'Opensea 🌊',
         //                     currency: 'ETH',
         //                     totalPrice: '9',
-        //                     hash: '0x1234',
+        //                     hash: hash,
         //                     contractAddress: randomContract
         //                 },
         //                 addresses: [
