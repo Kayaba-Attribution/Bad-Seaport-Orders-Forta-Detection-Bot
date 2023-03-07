@@ -501,3 +501,20 @@ Finding {
 > 10 Donald Trump Yacht Club id/s: 8530,8422,8304,6845,5278,4849,2835,2622,1493,650 sold on Opensea 🌊 for 0 ETH with a floor price of 0.0072 ETH
 - 0xc57a28a4bd32996005bff6337b6143a17559b7f02d5f68718689a29e01961f53
 > 6 100 Meals id/s: 12848,12845,12847,9315,9316,9317 sold on Opensea 🌊 for 0 ETH with a floor price of 0.003 ETH
+
+Hello All! 
+
+I deployed the bot a few days ago and it was working, but then I wanted to make some changes to the code. After I ran npm run publish again the agent was successfully updated but no incoming txs from the node operators were reaching it.
+
+I tried to disable and enable the agent but still no txns or alerts are being fired.
+
+Also on the UI it seems like the bot is disabled but the output of npm run info for me is:
+
+name: seaport-orders-forta-detection-bot
+agentId: 0xd9584a587a469f3cdd8a03ffccb14114bc78485657e28739b8036aee7782df5c
+status: Enabled
+version: 1.0.1
+
+The first version of the bot was using obfuscating for the source code, but the new version is using the normal code in case that the obfuscating step was triggering any errors.
+
+Any ideas on how to get incoming transactions, or what may be stopping the bot from working correctly?
